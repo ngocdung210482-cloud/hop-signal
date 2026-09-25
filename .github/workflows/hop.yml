@@ -1,0 +1,43 @@
+name: Canh bao hop Vang BTC ETH
+
+on:
+  schedule:
+    - cron: "2 * * * *"   # phút thứ 2 mỗi giờ (sau khi nến 1H đóng cửa)
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "Gửi tin thử + tóm tắt (true/false)"
+        default: "false"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: hop-signal
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install requests
+      - name: Chạy cảnh báo
+        env:
+          TWELVE_KEY: ${{ secrets.TWELVE_KEY }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: |
+          if [ "${{ github.event.inputs.test }}" = "true" ]; then
+            python hop_signal.py --test
+          else
+            python hop_signal.py
+          fi
+      - name: Lưu trạng thái (tránh báo trùng)
+        run: |
+          git config user.name "hop-bot"
+          git config user.email "hop-bot@users.noreply.github.com"
+          git add state.json || true
+          git diff --cached --quiet || (git commit -m "cập nhật trạng thái" && git push)
