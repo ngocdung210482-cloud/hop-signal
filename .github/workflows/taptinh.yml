@@ -1,0 +1,24 @@
+name: Nghien cuu tap tinh gia
+
+on:
+  push:
+    paths:
+      - "taptinh.py"
+  schedule:
+    - cron: "0 1 * * 1"   # 8h sáng thứ 2 (giờ VN) mỗi tuần cập nhật lại
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install requests
+      - name: Tính và gửi kết quả
+        env:
+          TWELVE_KEY: ${{ secrets.TWELVE_KEY }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python taptinh.py
