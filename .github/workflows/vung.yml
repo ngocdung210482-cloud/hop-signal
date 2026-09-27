@@ -1,0 +1,46 @@
+name: Canh bao gia gan vung 1H 4H ngay
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # 15 phút/lần (GitHub có thể chạy trễ vài phút)
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "Gửi tin thử + danh sách vùng gần giá (true/false)"
+        default: "true"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: hop-signal
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install requests
+      - name: Chạy cảnh báo gần vùng
+        env:
+          TWELVE_KEY: ${{ secrets.TWELVE_KEY }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: |
+          if [ "${{ github.event.inputs.test }}" = "true" ]; then
+            python vung_signal.py --test
+          else
+            python vung_signal.py
+          fi
+      - name: Lưu trạng thái (tránh báo trùng)
+        run: |
+          git config user.name "hop-bot"
+          git config user.email "hop-bot@users.noreply.github.com"
+          git add vung_state.json || true
+          if ! git diff --cached --quiet; then
+            git commit -m "cập nhật trạng thái vùng"
+            git pull --rebase origin ${{ github.ref_name }} && git push
+          fi
