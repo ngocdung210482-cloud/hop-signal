@@ -1,0 +1,35 @@
+name: Tai du lieu khop lenh
+
+on:
+  workflow_dispatch:
+    inputs:
+      symbol:
+        description: "Cap coin (vd BTCUSDT)"
+        default: "BTCUSDT"
+      months:
+        description: "So thang gan nhat can tai"
+        default: "12"
+  schedule:
+    - cron: "17 3 2 * *"   # ngay 2 hang thang, tu tai them thang vua qua
+
+permissions:
+  contents: write
+
+jobs:
+  tai:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install pandas numpy
+      - run: python aggflow.py "${{ github.event.inputs.symbol || 'BTCUSDT' }}" "${{ github.event.inputs.months || '2' }}"
+      - name: Luu vao repo
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add data/aggflow
+          git commit -m "Du lieu khop lenh" || echo "khong co gi moi"
+          git push
