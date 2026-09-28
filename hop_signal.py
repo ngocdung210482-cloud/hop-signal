@@ -498,4 +498,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except BaseException as e:  # ghi lý do lỗi ra trang GitHub Actions để dễ xem
+        msg = repr(e)
+        if isinstance(e, requests.HTTPError) and e.response is not None:
+            msg += " | " + e.response.text[:300]
+        print(f"::error::{msg}")
+        raise
