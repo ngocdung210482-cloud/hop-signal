@@ -1,8 +1,6 @@
 name: Canh bao gia gan vung 1H 4H ngay
 
 on:
-  schedule:
-    - cron: "*/15 * * * *"   # 15 phút/lần (GitHub có thể chạy trễ vài phút)
   workflow_dispatch:
     inputs:
       test:

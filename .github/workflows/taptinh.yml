@@ -4,8 +4,6 @@ on:
   push:
     paths:
       - "taptinh.py"
-  schedule:
-    - cron: "0 1 * * 1"   # 8h sáng thứ 2 (giờ VN) mỗi tuần cập nhật lại
   workflow_dispatch:
 
 jobs:
