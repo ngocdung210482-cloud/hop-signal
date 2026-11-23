@@ -53,8 +53,8 @@ def fmt(x):
 
 
 # ═════════════ DỮ LIỆU ═════════════
-def _bars_binance(url):
-    r = requests.get(url, params={"symbol": "BTCUSDT", "interval": "15m", "limit": 100},
+def _bars_binance(url, khung="15m"):
+    r = requests.get(url, params={"symbol": "BTCUSDT", "interval": khung, "limit": 100},
                      timeout=20, headers=UA)
     r.raise_for_status()
     out = []
@@ -64,9 +64,9 @@ def _bars_binance(url):
     return out
 
 
-def _bars_okx():
+def _bars_okx(khung="15m"):
     r = requests.get("https://www.okx.com/api/v5/market/candles",
-                     params={"instId": "BTC-USDT-SWAP", "bar": "15m", "limit": 100},
+                     params={"instId": "BTC-USDT-SWAP", "bar": khung, "limit": 100},
                      timeout=20, headers=UA)
     r.raise_for_status()
     d = r.json()["data"]
@@ -77,24 +77,25 @@ def _bars_okx():
     return out
 
 
-def lay_nen():
+def lay_nen(khung="15m"):
+    do_dai = dt.timedelta(minutes=int(khung[:-1]))
     nguon = [
-        ("Binance Futures", lambda: _bars_binance("https://fapi.binance.com/fapi/v1/klines")),
-        ("OKX Futures", _bars_okx),
-        ("Binance Spot", lambda: _bars_binance("https://data-api.binance.vision/api/v3/klines")),
+        ("Binance Futures", lambda: _bars_binance("https://fapi.binance.com/fapi/v1/klines", khung)),
+        ("OKX Futures", lambda: _bars_okx(khung)),
+        ("Binance Spot", lambda: _bars_binance("https://data-api.binance.vision/api/v3/klines", khung)),
     ]
     for ten, f in nguon:
         try:
             bars = f()
             t_now = now_utc()
-            bars = [b for b in bars if b["t"] + NEN <= t_now]   # chỉ nến đã đóng
+            bars = [b for b in bars if b["t"] + do_dai <= t_now]   # chỉ nến đã đóng
             if len(bars) >= 10:
-                diag.append(f"Nến 15m: lấy từ {ten} — OK ({len(bars)} nến)")
+                diag.append(f"Nến {khung}: lấy từ {ten} — OK ({len(bars)} nến)")
                 return ten, bars
-            diag.append(f"Nến 15m: {ten} trả về quá ít dữ liệu")
+            diag.append(f"Nến {khung}: {ten} trả về quá ít dữ liệu")
         except Exception as e:  # noqa
-            diag.append(f"Nến 15m: {ten} lỗi — {str(e)[:120]}")
-    raise RuntimeError("Không lấy được nến từ nguồn nào")
+            diag.append(f"Nến {khung}: {ten} lỗi — {str(e)[:120]}")
+    raise RuntimeError(f"Không lấy được nến {khung} từ nguồn nào")
 
 
 def _oi_binance():
@@ -219,7 +220,7 @@ def ke_hoach(cfg, phia, cuc_tri, gia):
         dong.append("Mục tiêu: chưa có cụm phía bên kia trong muc.json")
     if lot:
         dong.append(f"Khối lượng: ~{lot:.2f} lot (rủi ro {fmt(rui_ro)} USC)")
-    dong.append("👉 Chờ nến 5m đóng vượt đỉnh/đáy nhỏ rồi mới vào, tính lại theo giá thật.")
+    dong.append("👉 Bot đang canh nến 5m, có xác nhận sẽ báo ✅ VÀO LỆNH.")
     return "\n".join(dong)
 
 
@@ -335,6 +336,8 @@ def _quet(cfg, state, k, phia, L, cuc, b, oi_ch, gui):
 
 def _du_dieu_kien(cfg, quet, gia, oi_ch, gui):
     quet["da_ket_hop"] = True
+    CHO_XAC_NHAN.append({"phia": quet["phia"], "muc": quet["muc"], "cuc": quet["cuc"],
+                         "t": quet["t"], "vung": quet["vung"]})
     huong = "LONG" if quet["phia"] == "long" else "SHORT"
     t = dt.datetime.fromisoformat(quet["t"])
     gui("du_dieu_kien", f"🚨 ĐỦ ĐIỀU KIỆN {huong} BTC — mở biểu đồ 5m",
@@ -342,6 +345,73 @@ def _du_dieu_kien(cfg, quet, gia, oi_ch, gui):
         f"OI 1 giờ: {oi_ch:+.2f}% (phe kẹt đã bị xả).\n"
         + ke_hoach(cfg, quet["phia"], quet["cuc"], gia),
         5, ["rotating_light"], quet["muc"], gia)
+
+
+CHO_XAC_NHAN = []
+HET_HAN_XAC_NHAN = dt.timedelta(hours=2)
+
+
+def dinh_day_nho(b5, i_cuc, phia):
+    """Đỉnh nhỏ gần nhất trước đáy quét (long) / đáy nhỏ gần nhất trước đỉnh quét (short)."""
+    for j in range(i_cuc - 1, 1, -1):
+        if j + 1 >= len(b5):
+            continue
+        if phia == "long" and b5[j]["h"] >= b5[j - 1]["h"] and b5[j]["h"] > b5[j + 1]["h"] \
+                and b5[j]["h"] >= b5[j - 2]["h"]:
+            return b5[j]["h"]
+        if phia == "short" and b5[j]["l"] <= b5[j - 1]["l"] and b5[j]["l"] < b5[j + 1]["l"] \
+                and b5[j]["l"] <= b5[j - 2]["l"]:
+            return b5[j]["l"]
+    truoc = b5[max(0, i_cuc - 3):i_cuc] or [b5[i_cuc]]
+    return max(b["h"] for b in truoc) if phia == "long" else min(b["l"] for b in truoc)
+
+
+def xac_nhan_5m(cfg, c, b5, t_now, gui):
+    """True = đã xong (báo vào lệnh / hủy / hết hạn), bỏ khỏi danh sách chờ."""
+    phia = c["phia"]
+    t_quet = dt.datetime.fromisoformat(c["t"])
+    huong = "LONG" if phia == "long" else "SHORT"
+    if t_now - t_quet > HET_HAN_XAC_NHAN:
+        gui("het_han", f"⌛ Hết hạn chờ xác nhận {huong} cụm {fmt(c['muc'])}",
+            "Đã 2 giờ không có nến 5m xác nhận → bỏ kèo này.", 2, ["hourglass"], c["muc"], b5[-1]["c"])
+        return True
+    tu = t_quet - dt.timedelta(minutes=30)
+    idx = [i for i, b in enumerate(b5) if b["t"] >= tu]
+    if not idx:
+        return False
+    i0 = idx[0]
+    if phia == "long":
+        i_cuc = min(range(i0, len(b5)), key=lambda i: b5[i]["l"])
+    else:
+        i_cuc = max(range(i0, len(b5)), key=lambda i: b5[i]["h"])
+    cuc = b5[i_cuc]["l"] if phia == "long" else b5[i_cuc]["h"]
+    # giá phá xa hơn râu quét ban đầu → cụm không giữ được
+    if (phia == "long" and cuc < c["cuc"] * 0.997) or (phia == "short" and cuc > c["cuc"] * 1.003):
+        gui("huy", f"❌ Hủy kèo {huong} cụm {fmt(c['muc'])}",
+            f"Giá đi tiếp qua râu quét ({fmt(cuc)}) → vùng không giữ được, không vào.",
+            3, ["x"], c["muc"], b5[-1]["c"])
+        return True
+    moc = dinh_day_nho(b5, i_cuc, phia)
+    for b in b5[i_cuc + 1:]:
+        ok = b["c"] > moc if phia == "long" else b["c"] < moc
+        if not ok:
+            continue
+        tre = int((t_now - (b["t"] + dt.timedelta(minutes=5))).total_seconds() // 60)
+        kh = ke_hoach(cfg, phia, cuc, b["c"])
+        tieu_de = (f"⚠️ {huong} có xác nhận 5m nhưng CHƯA ĐẠT 2R — bỏ" if "CHƯA ĐẠT 2R" in kh
+                   else f"✅ VÀO LỆNH {huong} BTC — có xác nhận 5m")
+        canh_bao_tre = f"\n⏱ Tin trễ {tre} phút — kiểm tra lại giá hiện tại trước khi vào." if tre >= 10 else ""
+        gui("vao_lenh", tieu_de,
+            f"Nến 5m lúc {gio_vn(b['t'])} đóng {fmt(b['c'])} "
+            + ("vượt đỉnh" if phia == "long" else "thủng đáy") + f" nhỏ {fmt(moc)}.\n"
+            f"Kèo: quét cụm {fmt(c['muc'])}" + (f", sát {c['vung']}" if c.get("vung") else "") + ".\n"
+            + kh.replace(
+                "👉 Bot đang canh nến 5m, có xác nhận sẽ báo ✅ VÀO LỆNH.",
+                "👉 Ghi ra giấy: giá vào, cắt lỗ, khối lượng — rồi mới bấm lệnh.")
+            + canh_bao_tre,
+            5, ["white_check_mark"], c["muc"], b["c"])
+        return True
+    return False
 
 
 def main():
@@ -382,6 +452,16 @@ def main():
                 and oi_ch <= -cfg.get("oi_xac_nhan_phan_tram", 1.0):
             _du_dieu_kien(cfg, q, gia, oi_ch, gui)
     state["quet_gan"] = con
+
+    # ── canh xác nhận nến 5m sau tin ĐỦ ĐIỀU KIỆN ──
+    cho = state.get("cho_xac_nhan", []) + CHO_XAC_NHAN
+    if cho:
+        try:
+            _, b5 = lay_nen("5m")
+            cho = [c for c in cho if not xac_nhan_5m(cfg, c, b5, t_now, gui)]
+        except Exception as e:  # noqa
+            diag.append(f"Xác nhận 5m: lỗi — {str(e)[:120]}")
+    state["cho_xac_nhan"] = cho
 
     # ── OI xả mạnh ──
     if oi_ch is not None and oi_ch <= -cfg.get("oi_xa_manh_phan_tram", 2.0):
