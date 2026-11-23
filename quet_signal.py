@@ -473,6 +473,22 @@ def main():
                 3, ["chart_with_downwards_trend"], "OI", gia)
             state["bao_oi"] = t_now.isoformat()
 
+    # ── giá đi xa khỏi lúc cập nhật mức → cần heatmap mới ──
+    ma_muc = json.dumps({k: cfg.get(k) for k in ("vung", "cum_long_duoi_gia", "cum_short_tren_gia")},
+                        sort_keys=True)
+    if state.get("ma_muc") != ma_muc:
+        state["ma_muc"] = ma_muc
+        state["gia_luc_cap_nhat"] = gia
+        state["da_bao_xa"] = False
+    goc = state.get("gia_luc_cap_nhat") or gia
+    lech = (gia / goc - 1) * 100
+    if abs(lech) >= cfg.get("gia_xa_phan_tram", 2.0) and not state.get("da_bao_xa"):
+        ntfy(topic, "📸 Giá đã đi xa — cần cập nhật mức",
+             f"Giá {fmt(gia)}, {lech:+.1f}% so với lúc cập nhật mức ({fmt(goc)}).\n"
+             f"Các cụm thanh lý có thể đã thay đổi. Chụp heatmap (Model 1, Coin, 24 giờ) "
+             f"+ biểu đồ 4H gửi Claude.", 3, ["camera"])
+        state["da_bao_xa"] = True
+
     # ── nhắc chụp heatmap mỗi ngày (sau 8h sáng VN) ──
     vn = t_now + VN
     hom_nay = vn.date().isoformat()
