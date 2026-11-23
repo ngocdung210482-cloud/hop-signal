@@ -1,26 +1,31 @@
 name: Bot quet thanh ly tai vung (BTC)
 
+# Mỗi lần chạy: lặp kiểm tra khoảng 5 phút/lần trong ~5 giờ 40 phút,
+# rồi tự khởi động lần chạy mới (GitHub giới hạn 6 giờ/lần chạy).
+# Đẩy code/mức mới lên → lần chạy cũ bị thay bằng lần chạy mới.
+
 on:
-  schedule:
-    - cron: "*/5 * * * *"      # khoảng 5 phút/lần (GitHub có thể chạy trễ vài phút)
   push:
     paths:
       - "muc.json"
       - "quet_signal.py"
       - ".github/workflows/quet-thanh-ly.yml"
   workflow_dispatch:
+  schedule:
+    - cron: "23 */6 * * *"     # dự phòng: nếu chuỗi tự khởi động bị đứt thì bật lại
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: quet-thanh-ly
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 355
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -33,26 +38,47 @@ jobs:
           path: quet_state.json
           key: quet-state-${{ github.run_id }}
           restore-keys: quet-state-
-      - name: Chạy bot
+      - name: Chạy bot (lặp 5 phút/lần)
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: |
-          if [ "${{ github.event_name }}" = "schedule" ]; then
-            python quet_signal.py
-          else
-            python quet_signal.py --test
-          fi
+          git config user.name "quet-bot"
+          git config user.email "quet-bot@users.noreply.github.com"
+          ma_code() { cat quet_signal.py .github/workflows/quet-thanh-ly.yml | sha1sum; }
+          CODE0=$(ma_code)
+          HET=$((SECONDS + 20400))
+          LAN=0
+          while [ $SECONDS -lt $HET ]; do
+            BATDAU=$SECONDS
+            git pull -q --rebase origin "${{ github.ref_name }}" || git rebase --abort || true
+            if [ "$(ma_code)" != "$CODE0" ]; then
+              echo "Code mới — dừng để lần chạy mới thay thế"; break
+            fi
+            if [ $LAN -eq 0 ] && [ "${{ github.event_name }}" = "push" ]; then
+              python quet_signal.py --test || true
+            else
+              python quet_signal.py || true
+            fi
+            for f in nhat_ky_tin_hieu.csv ket_qua_chay.txt; do [ -f "$f" ] && git add "$f"; done
+            if ! git diff --cached --quiet; then
+              git commit -q -m "nhật ký bot quét thanh lý"
+              git pull -q --rebase origin "${{ github.ref_name }}" && git push -q || true
+            fi
+            LAN=$((LAN + 1))
+            NGU=$((300 - (SECONDS - BATDAU)))
+            if [ $NGU -gt 0 ]; then sleep $NGU; fi
+          done
       - name: Lưu trạng thái
+        if: always()
         uses: actions/cache/save@v4
         with:
           path: quet_state.json
           key: quet-state-${{ github.run_id }}
-      - name: Lưu nhật ký tín hiệu
+      - name: Tự khởi động lần chạy tiếp theo
+        if: ${{ !cancelled() }}
         run: |
-          git config user.name "quet-bot"
-          git config user.email "quet-bot@users.noreply.github.com"
-          for f in nhat_ky_tin_hieu.csv ket_qua_chay.txt; do [ -f "$f" ] && git add "$f"; done
-          if ! git diff --cached --quiet; then
-            git commit -m "nhật ký bot quét thanh lý"
-            git pull --rebase origin ${{ github.ref_name }} && git push
-          fi
+          curl -sf -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/quet-thanh-ly.yml/dispatches" \
+            -d '{"ref":"${{ github.ref_name }}"}' && echo "Đã khởi động lần chạy mới"

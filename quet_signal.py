@@ -443,6 +443,8 @@ def main():
         state["muc"] = {}
         state["vung"] = {}
         canh_bao = khoi_tao_muc(cfg, state, gia)
+        if state.get("nen_cuoi"):
+            test = True          # báo tóm tắt mức mới lên điện thoại
 
     last = state.get("nen_cuoi")
     if last is None or doi_muc:
@@ -523,7 +525,7 @@ def main():
             phia, L = k.split(":")
             dong.append(f"• {phia} {fmt(float(L))}: {ten_tt[s['tt']]}")
         dong += canh_bao
-        ntfy(topic, "✅ Bot quét thanh lý đã chạy", "\n".join(dong), 3, ["white_check_mark"])
+        ntfy(topic, "✅ Bot quét thanh lý: mức đang canh", "\n".join(dong), 3, ["white_check_mark"])
         with open(DIAG, "w", encoding="utf-8") as f:
             f.write(f"Chạy lúc {gio_vn(t_now)} (giờ VN)\n" + "\n".join(diag) + "\n\n"
                     + "\n".join(dong) + "\n")
