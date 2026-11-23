@@ -1,0 +1,57 @@
+name: Bot quet thanh ly tai vung (BTC)
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"      # khoảng 5 phút/lần (GitHub có thể chạy trễ vài phút)
+  push:
+    paths:
+      - "muc.json"
+      - "quet_signal.py"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: quet-thanh-ly
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install requests
+      - name: Lấy trạng thái lần chạy trước
+        uses: actions/cache/restore@v4
+        with:
+          path: quet_state.json
+          key: quet-state-${{ github.run_id }}
+          restore-keys: quet-state-
+      - name: Chạy bot
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            python quet_signal.py
+          else
+            python quet_signal.py --test
+          fi
+      - name: Lưu trạng thái
+        uses: actions/cache/save@v4
+        with:
+          path: quet_state.json
+          key: quet-state-${{ github.run_id }}
+      - name: Lưu nhật ký tín hiệu
+        run: |
+          git config user.name "quet-bot"
+          git config user.email "quet-bot@users.noreply.github.com"
+          git add nhat_ky_tin_hieu.csv ket_qua_chay.txt 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m "nhật ký bot quét thanh lý"
+            git pull --rebase origin ${{ github.ref_name }} && git push
+          fi
