@@ -432,8 +432,20 @@ def main():
     nguon_oi, oi, oi_ch = lay_oi(state)
     canh_bao = khoi_tao_muc(cfg, state, gia)
 
+    # đổi mức → không chạy lại nến cũ với mức mới (tránh báo sai)
+    ma_muc = json.dumps({k: cfg.get(k) for k in ("vung", "cum_long_duoi_gia", "cum_short_tren_gia")},
+                        sort_keys=True)
+    doi_muc = state.get("ma_muc") != ma_muc
+    if doi_muc:
+        state["ma_muc"] = ma_muc
+        state["gia_luc_cap_nhat"] = gia
+        state["da_bao_xa"] = False
+        state["muc"] = {}
+        state["vung"] = {}
+        canh_bao = khoi_tao_muc(cfg, state, gia)
+
     last = state.get("nen_cuoi")
-    if last is None:
+    if last is None or doi_muc:
         moi = []                                   # lần đầu: chỉ lấy mốc, không báo lịch sử
     else:
         last_t = dt.datetime.fromisoformat(last)
@@ -474,12 +486,6 @@ def main():
             state["bao_oi"] = t_now.isoformat()
 
     # ── giá đi xa khỏi lúc cập nhật mức → cần heatmap mới ──
-    ma_muc = json.dumps({k: cfg.get(k) for k in ("vung", "cum_long_duoi_gia", "cum_short_tren_gia")},
-                        sort_keys=True)
-    if state.get("ma_muc") != ma_muc:
-        state["ma_muc"] = ma_muc
-        state["gia_luc_cap_nhat"] = gia
-        state["da_bao_xa"] = False
     goc = state.get("gia_luc_cap_nhat") or gia
     lech = (gia / goc - 1) * 100
     if abs(lech) >= cfg.get("gia_xa_phan_tram", 2.0) and not state.get("da_bao_xa"):
