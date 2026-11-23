@@ -7,6 +7,7 @@ on:
     paths:
       - "muc.json"
       - "quet_signal.py"
+      - ".github/workflows/quet-thanh-ly.yml"
   workflow_dispatch:
 
 permissions:
@@ -50,7 +51,7 @@ jobs:
         run: |
           git config user.name "quet-bot"
           git config user.email "quet-bot@users.noreply.github.com"
-          git add nhat_ky_tin_hieu.csv ket_qua_chay.txt 2>/dev/null || true
+          for f in nhat_ky_tin_hieu.csv ket_qua_chay.txt; do [ -f "$f" ] && git add "$f"; done
           if ! git diff --cached --quiet; then
             git commit -m "nhật ký bot quét thanh lý"
             git pull --rebase origin ${{ github.ref_name }} && git push
