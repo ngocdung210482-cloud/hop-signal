@@ -1,6 +1,6 @@
 {
-  "ghi_chu": "Các mức cho bot Quét thanh lý tại vùng. Tạm thời chờ nến 4H đóng 23:00 (23/11) để xác nhận vùng gấu 62.000–63.500 còn giữ hay bị phá.",
-  "ngay_cap_nhat": "2026-11-23",
+  "ghi_chu": "Cụm lấy từ CoinGlass Model 1, chế độ Coin, 24 giờ (00:14 ngày 24/11). Vùng gấu 4H giữ sau nến 23:00 đóng ~63.000 (dưới 63.500).",
+  "ngay_cap_nhat": "2026-11-24",
   "so_du_usc": 2000,
   "rui_ro_phan_tram": 2,
   "cum_gan_vung_phan_tram": 1.0,
@@ -14,21 +14,28 @@
       "den": 63500
     },
     {
-      "ten": "Vùng bò 4H",
+      "ten": "Vùng bò 4H (nền cú bơm 23/11)",
+      "loai": "bo",
+      "tu": 60700,
+      "den": 61300
+    },
+    {
+      "ten": "Vùng bò 4H (đáy 22/11)",
       "loai": "bo",
       "tu": 59000,
       "den": 59800
     }
   ],
   "cum_long_duoi_gia": [
-    62571,
-    62337,
-    61926,
+    61281,
     60871,
     60578,
     60285
   ],
   "cum_short_tren_gia": [
-    65737
+    62513,
+    63744,
+    63978,
+    64623
   ]
 }
