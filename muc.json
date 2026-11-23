@@ -1,5 +1,5 @@
 {
-  "ghi_chu": "Các mức cho bot Quét thanh lý tại vùng. Gửi ảnh heatmap/biểu đồ cho Claude để cập nhật. Cụm lấy từ CoinGlass Model 1, BTCUSDT Binance, 24 giờ.",
+  "ghi_chu": "Các mức cho bot Quét thanh lý tại vùng. Tạm thời chờ nến 4H đóng 23:00 (23/11) để xác nhận vùng gấu 62.000–63.500 còn giữ hay bị phá.",
   "ngay_cap_nhat": "2026-11-23",
   "so_du_usc": 2000,
   "rui_ro_phan_tram": 2,
@@ -7,9 +7,28 @@
   "oi_xa_manh_phan_tram": 2.0,
   "oi_xac_nhan_phan_tram": 1.0,
   "vung": [
-    {"ten": "Vùng bò mới (gấu cũ đổi vai)", "loai": "bo", "tu": 62000, "den": 62700},
-    {"ten": "Vùng bò 4H", "loai": "bo", "tu": 59000, "den": 59800}
+    {
+      "ten": "Vùng gấu 4H",
+      "loai": "gau",
+      "tu": 62000,
+      "den": 63500
+    },
+    {
+      "ten": "Vùng bò 4H",
+      "loai": "bo",
+      "tu": 59000,
+      "den": 59800
+    }
   ],
-  "cum_long_duoi_gia": [62571, 62337, 61926, 60871, 60578, 60285],
-  "cum_short_tren_gia": [64858, 65737]
+  "cum_long_duoi_gia": [
+    62571,
+    62337,
+    61926,
+    60871,
+    60578,
+    60285
+  ],
+  "cum_short_tren_gia": [
+    65737
+  ]
 }
