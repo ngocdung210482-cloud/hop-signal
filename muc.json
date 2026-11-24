@@ -1,5 +1,5 @@
 {
-  "ghi_chu": "Cụm lấy từ CoinGlass Model 1, Coin, 24 giờ (09:34 ngày 24/11). Vùng bò 60.700–61.300 đang bị thử thủng, chờ nến 4H đóng 11:00.",
+  "ghi_chu": "Cụm lấy từ CoinGlass Model 1, Coin, 24 giờ (09:50 ngày 24/11). Short chiếm 73%. Chờ nến 4H 11:00 để chốt vùng bò 60.700–61.300.",
   "ngay_cap_nhat": "2026-11-24",
   "so_du_usc": 2000,
   "rui_ro_phan_tram": 2,
@@ -27,15 +27,15 @@
     }
   ],
   "cum_long_duoi_gia": [
-    60285,
-    59464,
-    59112,
-    58760
+    59965,
+    59728,
+    59432,
+    59136
   ],
   "cum_short_tren_gia": [
-    61926,
-    62161,
-    63744,
-    63978
+    60911,
+    61917,
+    62153,
+    63987
   ]
 }
