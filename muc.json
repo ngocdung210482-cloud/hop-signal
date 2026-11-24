@@ -1,5 +1,5 @@
 {
-  "ghi_chu": "Cụm lấy từ CoinGlass Model 1, chế độ Coin, 24 giờ (00:14 ngày 24/11). Vùng gấu 4H giữ sau nến 23:00 đóng ~63.000 (dưới 63.500).",
+  "ghi_chu": "Cụm lấy từ CoinGlass Model 1, Coin, 24 giờ (08:07 ngày 24/11). Vùng bò 60.700–61.300 giữ qua đêm.",
   "ngay_cap_nhat": "2026-11-24",
   "so_du_usc": 2000,
   "rui_ro_phan_tram": 2,
@@ -27,15 +27,15 @@
     }
   ],
   "cum_long_duoi_gia": [
-    61281,
-    60871,
     60578,
-    60285
+    60109,
+    59346,
+    58760
   ],
   "cum_short_tren_gia": [
-    62513,
+    61926,
+    62219,
     63744,
-    63978,
-    64623
+    63978
   ]
 }
