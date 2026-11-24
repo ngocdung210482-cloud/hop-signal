@@ -1,5 +1,5 @@
 {
-  "ghi_chu": "Cụm lấy từ CoinGlass Model 1, Coin, 24 giờ (11:35 ngày 24/11). Short chiếm 76%. Vùng bò 60.700–61.300 bị thủng (nến 4H 11:00 đóng ~60.500) → đổi vai thành vùng gấu nhỏ.",
+  "ghi_chu": "Cụm lấy từ CoinGlass Model 1, Coin, 24 giờ (17:55 ngày 24/11). Short chiếm 75%.",
   "ngay_cap_nhat": "2026-11-24",
   "so_du_usc": 2000,
   "rui_ro_phan_tram": 2,
@@ -27,15 +27,15 @@
     }
   ],
   "cum_long_duoi_gia": [
-    59735,
     59363,
-    59052,
+    59177,
+    58928,
     58556
   ],
   "cum_short_tren_gia": [
     60914,
-    61907,
     62155,
+    62528,
     63955
   ]
 }
