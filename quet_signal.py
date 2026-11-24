@@ -429,7 +429,14 @@ def main():
 
     nguon_nen, bars = lay_nen()
     gia = bars[-1]["c"]
-    nguon_oi, oi, oi_ch = lay_oi(state)
+    nguon_oi, oi, oi_ch_now = lay_oi(state)
+    oi_gan = [x for x in state.get("oi_gan", [])
+              if t_now - dt.datetime.fromisoformat(x[0]) <= CUA_SO_KET_HOP]
+    if oi_ch_now is not None:
+        oi_gan.append([t_now.isoformat(), oi_ch_now])
+    state["oi_gan"] = oi_gan
+    # OI xả trong lúc quét thường xảy ra TRƯỚC khi nến rút râu → lấy mức giảm sâu nhất 60 phút gần đây
+    oi_ch = min((x[1] for x in oi_gan), default=None)
     canh_bao = khoi_tao_muc(cfg, state, gia)
 
     # đổi mức → không chạy lại nến cũ với mức mới (tránh báo sai)
@@ -478,10 +485,10 @@ def main():
     state["cho_xac_nhan"] = cho
 
     # ── OI xả mạnh ──
-    if oi_ch is not None and oi_ch <= -cfg.get("oi_xa_manh_phan_tram", 2.0):
+    if oi_ch_now is not None and oi_ch_now <= -cfg.get("oi_xa_manh_phan_tram", 2.0):
         last_oi = state.get("bao_oi")
         if not last_oi or t_now - dt.datetime.fromisoformat(last_oi) >= COOLDOWN_OI:
-            gui("oi_xa", f"📉 OI BTC giảm mạnh {oi_ch:+.2f}% trong 1 giờ",
+            gui("oi_xa", f"📉 OI BTC giảm mạnh {oi_ch_now:+.2f}% trong 1 giờ",
                 f"Giá {fmt(gia)} lúc {gio_vn(t_now)}. Phe kẹt vừa bị cắt hàng loạt.\n"
                 f"Nếu giá đang ở vùng/cụm thì mở biểu đồ xem; nếu giữa 2 vùng thì đứng ngoài.",
                 3, ["chart_with_downwards_trend"], "OI", gia)
@@ -512,7 +519,7 @@ def main():
 
     if test:
         dong = [f"Giá BTC: {fmt(gia)} (nguồn {nguon_nen})",
-                "OI 1 giờ: " + ("chưa có" if oi_ch is None else f"{oi_ch:+.2f}% (nguồn {nguon_oi})"),
+                "OI 1 giờ: " + ("chưa có" if oi_ch_now is None else f"{oi_ch_now:+.2f}% (nguồn {nguon_oi})"),
                 "", "Vùng:"]
         for v in cfg.get("vung", []):
             s = state["vung"][f"{v['loai']}:{v['tu']}-{v['den']}"]
