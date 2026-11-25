@@ -9,6 +9,8 @@ on:
     paths:
       - "muc.json"
       - "quet_signal.py"
+      - "squeeze.py"
+      - "squeeze_them.json"
       - ".github/workflows/quet-thanh-ly.yml"
   workflow_dispatch:
   schedule:
@@ -59,7 +61,7 @@ jobs:
             else
               python quet_signal.py || true
             fi
-            for f in nhat_ky_tin_hieu.csv ket_qua_chay.txt; do [ -f "$f" ] && git add "$f"; done
+            for f in nhat_ky_tin_hieu.csv ket_qua_chay.txt nhat_ky_squeeze.csv tong_ket_squeeze.txt; do [ -f "$f" ] && git add "$f"; done
             if ! git diff --cached --quiet; then
               git commit -q -m "nhật ký bot quét thanh lý"
               git pull -q --rebase origin "${{ github.ref_name }}" && git push -q || true

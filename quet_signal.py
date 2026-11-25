@@ -23,6 +23,8 @@ import sys
 
 import requests
 
+import squeeze
+
 DIR = os.path.dirname(os.path.abspath(__file__))
 MUC = os.path.join(DIR, "muc.json")
 STATE = os.path.join(DIR, "quet_state.json")
@@ -438,6 +440,14 @@ def main():
     # OI xả trong lúc quét thường xảy ra TRƯỚC khi nến rút râu → lấy mức giảm sâu nhất 60 phút gần đây
     oi_ch = min((x[1] for x in oi_gan), default=None)
     canh_bao = khoi_tao_muc(cfg, state, gia)
+
+    # ── theo dõi squeeze: chỉ ghi nhật ký, không gửi ntfy ──
+    try:
+        squeeze.ghi_mau_oi(state, t_now, nguon_oi, oi, gia)
+        squeeze.cap_nhat(state, bars, t_now)
+        diag.append(f"Squeeze: đang theo dõi {len(state.get('sq_su_kien', []))} sự kiện")
+    except Exception as e:  # noqa
+        diag.append(f"Squeeze: lỗi — {str(e)[:120]}")
 
     # đổi mức → không chạy lại nến cũ với mức mới (tránh báo sai)
     ma_muc = json.dumps({k: cfg.get(k) for k in ("vung", "cum_long_duoi_gia", "cum_short_tren_gia")},
