@@ -1,17 +1,17 @@
-Chạy lúc 07:19 26/11 (giờ VN)
+Chạy lúc 07:38 26/11 (giờ VN)
 Nến 15m: Binance Futures lỗi — 451 Client Error:  for url: https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=15m&limit=100
 Nến 15m: lấy từ OKX Futures — OK (99 nến)
 OI: Binance lỗi — 451 Client Error:  for url: https://fapi.binance.com/futures/data/openInterestHist?symbol=BTCUSDT&period=5m&limit=13
-OI (BTC): lấy từ OKX — OK, 1 giờ thay đổi -1.85%
+OI (BTC): lấy từ OKX — OK, 1 giờ thay đổi -1.37%
 Squeeze: đang theo dõi 1 sự kiện
-CVD 1 giờ: +69815260 BTC (mua chủ động 62%)
-Funding: +0.0100%
 Nến 5m: Binance Futures lỗi — 451 Client Error:  for url: https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=5m&limit=100
 Nến 5m: lấy từ OKX Futures — OK (99 nến)
+CVD 1 giờ: +2125 BTC (mua chủ động 58%)
+Funding: +0.0100%
 
-Giá BTC: 60.940 (nguồn OKX Futures)
-OI 1 giờ (BTC): -1.85% (nguồn OKX)
-CVD 1 giờ: +69815260 BTC, mua chủ động 62%
+Giá BTC: 60.800 (nguồn OKX Futures)
+OI 1 giờ (BTC): -1.37% (nguồn OKX)
+CVD 1 giờ: +2125 BTC, mua chủ động 58%
 Funding: +0.0100%
 
 Vùng:
@@ -24,5 +24,5 @@ Cụm đang canh:
 • long 56.977: đang canh
 • short 60.599: đang ở bên kia, chờ rút
 • short 60.757: đang ở bên kia, chờ rút
-• short 60.914: đang ở bên kia, chờ rút
-• short 61.597: đang canh
+• short 60.914: đã quét
+• short 61.597: đã quét
