@@ -1,22 +1,22 @@
-Chạy lúc 00:19 26/11 (giờ VN)
+Chạy lúc 07:10 26/11 (giờ VN)
 Nến 15m: Binance Futures lỗi — 451 Client Error:  for url: https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=15m&limit=100
 Nến 15m: lấy từ OKX Futures — OK (99 nến)
 OI: Binance lỗi — 451 Client Error:  for url: https://fapi.binance.com/futures/data/openInterestHist?symbol=BTCUSDT&period=5m&limit=13
-OI: lấy từ OKX — OK, 1 giờ thay đổi +0.88%
-Squeeze: đang theo dõi 1 sự kiện
+OI: lấy từ OKX — OK, 1 giờ thay đổi +0.90%
+Squeeze: đang theo dõi 0 sự kiện
 
-Giá BTC: 59.222 (nguồn OKX Futures)
-OI 1 giờ: +0.88% (nguồn OKX)
+Giá BTC: 60.433 (nguồn OKX Futures)
+OI 1 giờ: +0.90% (nguồn OKX)
 
 Vùng:
 • Vùng gấu 4H 62.000–63.500
 • Vùng gấu nhỏ (bò cũ đổi vai) 60.700–61.300
 Cụm đang canh:
-• long 57.792: đang canh
-• long 57.228: đang canh
-• long 56.972: đang canh
-• long 56.408: đang canh
-• short 59.689: đang canh
-• short 59.997: đang canh
-• short 60.202: đang canh
-• short 60.510: đang canh
+• long 58.709: đang canh
+• long 57.817: đang canh
+• long 57.239: đang canh
+• long 56.977: đang canh
+• short 60.599: đang canh
+• short 60.757: đang canh
+• short 60.914: đang canh
+• short 61.597: đang canh
