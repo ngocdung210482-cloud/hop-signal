@@ -163,8 +163,8 @@ def lay_oi(state, bars):
     return None, None, None
 
 
-def lay_bo_loc():
-    """CVD 1 giờ (mua chủ động − bán chủ động, BTC) và funding hiện tại. Chỉ để ghi nhật ký."""
+def lay_bo_loc(gia):
+    """CVD 1 giờ (mua chủ động − bán chủ động, quy ra BTC) và funding. Chỉ để ghi nhật ký."""
     kq = {"cvd_1h": None, "ty_le_mua": None, "funding": None}
     try:
         r = requests.get("https://www.okx.com/api/v5/rubik/stat/taker-volume",
@@ -174,7 +174,7 @@ def lay_bo_loc():
         d = r.json()["data"][:12]          # mới nhất trước: [ts, bán, mua]
         ban = sum(float(x[1]) for x in d)
         mua = sum(float(x[2]) for x in d)
-        kq["cvd_1h"] = mua - ban
+        kq["cvd_1h"] = (mua - ban) / gia        # OKX trả khối lượng theo USD → quy ra BTC
         kq["ty_le_mua"] = mua / (mua + ban) * 100 if mua + ban else None
         diag.append(f"CVD 1 giờ: {kq['cvd_1h']:+.0f} BTC (mua chủ động {kq['ty_le_mua']:.0f}%)")
     except Exception as e:  # noqa
@@ -481,7 +481,7 @@ def main():
         ghi_nhat_ky(t_now, loai, muc, gia, oi_ch, title)
         try:
             if not bo_loc:
-                bo_loc.update(lay_bo_loc())
+                bo_loc.update(lay_bo_loc(gia))
             ghi_bo_loc(t_now, loai, muc, gia, oi_ch, bo_loc)
         except Exception as e:  # noqa
             diag.append(f"Bộ lọc: lỗi ghi — {str(e)[:120]}")
@@ -587,7 +587,7 @@ def main():
 
     if test:
         if not bo_loc:
-            bo_loc.update(lay_bo_loc())
+            bo_loc.update(lay_bo_loc(gia))
         dong = [f"Giá BTC: {fmt(gia)} (nguồn {nguon_nen})",
                 "OI 1 giờ (BTC): " + ("chưa có" if oi_ch_now is None else f"{oi_ch_now:+.2f}% (nguồn {nguon_oi})"),
                 "CVD 1 giờ: " + ("chưa có" if bo_loc.get("cvd_1h") is None
