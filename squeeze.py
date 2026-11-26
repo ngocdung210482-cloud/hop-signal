@@ -41,12 +41,13 @@ def _vn(t):
 
 
 def ghi_mau_oi(state, t_now, nguon, oi, gia):
-    """Lưu mẫu OI quy ra BTC mỗi lần chạy (khoảng 5 phút/lần)."""
-    if oi is None or not gia:
+    """Lưu mẫu OI (BTC) mỗi lần chạy (khoảng 5 phút/lần)."""
+    if oi is None:
         return
-    oi_btc = oi / gia if nguon == "OKX" else oi      # OKX trả OI theo USD
-    mau = [m for m in state.get("sq_oi", []) if t_now - _t(m[0]) <= GIU_MAU_OI]
-    mau.append([t_now.isoformat(), oi_btc, nguon])
+    oi_btc = oi                                       # lay_oi đã quy ra BTC
+    # mẫu cũ theo kiểu USD (trước khi sửa) bị bỏ để không lẫn đơn vị
+    mau = [m for m in state.get("sq_oi", []) if t_now - _t(m[0]) <= GIU_MAU_OI and len(m) == 4]
+    mau.append([t_now.isoformat(), oi_btc, nguon, "btc"])
     state["sq_oi"] = mau
 
 

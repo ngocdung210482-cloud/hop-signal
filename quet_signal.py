@@ -29,6 +29,7 @@ DIR = os.path.dirname(os.path.abspath(__file__))
 MUC = os.path.join(DIR, "muc.json")
 STATE = os.path.join(DIR, "quet_state.json")
 LOG = os.path.join(DIR, "nhat_ky_tin_hieu.csv")
+LOG_BO_LOC = os.path.join(DIR, "nhat_ky_bo_loc.csv")
 DIAG = os.path.join(DIR, "ket_qua_chay.txt")
 
 VN = dt.timedelta(hours=7)
@@ -109,22 +110,33 @@ def _oi_binance():
     return vals[-1], (vals[-1] / vals[0] - 1) * 100
 
 
-def _oi_okx():
+def _gia_luc(bars, t):
+    """Giá đóng cửa của nến 15m gần thời điểm t nhất (nến chứa t, hoặc nến cuối)."""
+    for b in reversed(bars):
+        if b["t"] <= t:
+            return b["c"]
+    return bars[0]["c"]
+
+
+def _oi_okx(bars):
     r = requests.get("https://www.okx.com/api/v5/rubik/stat/contracts/open-interest-volume",
                      params={"ccy": "BTC", "period": "5m"}, timeout=20, headers=UA)
     r.raise_for_status()
     d = r.json()["data"]          # mới nhất trước: [ts, oi(USD), vol]
-    now_v = float(d[0][1])
-    hour_v = float(d[12][1])
+    # OKX trả OI theo USD → quy ra BTC (chia cho giá lúc đó), để giá chạy không làm OI "đổi giả"
+    t0 = dt.datetime.utcfromtimestamp(int(d[0][0]) / 1000)
+    t1 = dt.datetime.utcfromtimestamp(int(d[12][0]) / 1000)
+    now_v = float(d[0][1]) / _gia_luc(bars, t0)
+    hour_v = float(d[12][1]) / _gia_luc(bars, t1)
     return now_v, (now_v / hour_v - 1) * 100
 
 
-def lay_oi(state):
-    """Trả về (nguồn, oi, % thay đổi 1 giờ) hoặc (None, None, None)."""
-    for ten, f in (("Binance", _oi_binance), ("OKX", _oi_okx)):
+def lay_oi(state, bars):
+    """Trả về (nguồn, oi tính theo BTC, % thay đổi 1 giờ) hoặc (None, None, None)."""
+    for ten, f in (("Binance", _oi_binance), ("OKX", lambda: _oi_okx(bars))):
         try:
             oi, ch = f()
-            diag.append(f"OI: lấy từ {ten} — OK, 1 giờ thay đổi {ch:+.2f}%")
+            diag.append(f"OI (BTC): lấy từ {ten} — OK, 1 giờ thay đổi {ch:+.2f}%")
             return ten, oi, ch
         except Exception as e:  # noqa
             diag.append(f"OI: {ten} lỗi — {str(e)[:120]}")
@@ -149,6 +161,44 @@ def lay_oi(state):
     except Exception as e:  # noqa
         diag.append(f"OI: Hyperliquid lỗi — {str(e)[:120]}")
     return None, None, None
+
+
+def lay_bo_loc():
+    """CVD 1 giờ (mua chủ động − bán chủ động, BTC) và funding hiện tại. Chỉ để ghi nhật ký."""
+    kq = {"cvd_1h": None, "ty_le_mua": None, "funding": None}
+    try:
+        r = requests.get("https://www.okx.com/api/v5/rubik/stat/taker-volume",
+                         params={"ccy": "BTC", "instType": "CONTRACTS", "period": "5m"},
+                         timeout=20, headers=UA)
+        r.raise_for_status()
+        d = r.json()["data"][:12]          # mới nhất trước: [ts, bán, mua]
+        ban = sum(float(x[1]) for x in d)
+        mua = sum(float(x[2]) for x in d)
+        kq["cvd_1h"] = mua - ban
+        kq["ty_le_mua"] = mua / (mua + ban) * 100 if mua + ban else None
+        diag.append(f"CVD 1 giờ: {kq['cvd_1h']:+.0f} BTC (mua chủ động {kq['ty_le_mua']:.0f}%)")
+    except Exception as e:  # noqa
+        diag.append(f"CVD: lỗi — {str(e)[:120]}")
+    try:
+        r = requests.get("https://www.okx.com/api/v5/public/funding-rate",
+                         params={"instId": "BTC-USDT-SWAP"}, timeout=20, headers=UA)
+        r.raise_for_status()
+        kq["funding"] = float(r.json()["data"][0]["fundingRate"]) * 100
+        diag.append(f"Funding: {kq['funding']:+.4f}%")
+    except Exception as e:  # noqa
+        diag.append(f"Funding: lỗi — {str(e)[:120]}")
+    return kq
+
+
+def ghi_bo_loc(t, loai, muc, gia, oi_ch, bl):
+    moi = not os.path.exists(LOG_BO_LOC)
+    with open(LOG_BO_LOC, "a", encoding="utf-8") as f:
+        if moi:
+            f.write("gio_vn,loai,muc,gia,oi_btc_1h_pct,cvd_1h_btc,mua_chu_dong_pct,funding_pct\n")
+        def s(x, k):
+            return "" if x is None else f"{x:{k}}"
+        f.write(f"{gio_vn(t)},{loai},{muc},{gia:.0f},{s(oi_ch, '.2f')},{s(bl['cvd_1h'], '.0f')},"
+                f"{s(bl['ty_le_mua'], '.0f')},{s(bl['funding'], '.4f')}\n")
 
 
 # ═════════════ NTFY, TRẠNG THÁI, NHẬT KÝ ═════════════
@@ -424,14 +474,22 @@ def main():
     t_now = now_utc()
     so_tin = [0]
 
+    bo_loc = {}
+
     def gui(loai, title, msg, prio, tags, muc, gia):
         ntfy(topic, title, msg, prio, tags)
         ghi_nhat_ky(t_now, loai, muc, gia, oi_ch, title)
+        try:
+            if not bo_loc:
+                bo_loc.update(lay_bo_loc())
+            ghi_bo_loc(t_now, loai, muc, gia, oi_ch, bo_loc)
+        except Exception as e:  # noqa
+            diag.append(f"Bộ lọc: lỗi ghi — {str(e)[:120]}")
         so_tin[0] += 1
 
     nguon_nen, bars = lay_nen()
     gia = bars[-1]["c"]
-    nguon_oi, oi, oi_ch_now = lay_oi(state)
+    nguon_oi, oi, oi_ch_now = lay_oi(state, bars)
     oi_gan = [x for x in state.get("oi_gan", [])
               if t_now - dt.datetime.fromisoformat(x[0]) <= CUA_SO_KET_HOP]
     if oi_ch_now is not None:
@@ -528,8 +586,13 @@ def main():
         state["nhac_heatmap"] = hom_nay
 
     if test:
+        if not bo_loc:
+            bo_loc.update(lay_bo_loc())
         dong = [f"Giá BTC: {fmt(gia)} (nguồn {nguon_nen})",
-                "OI 1 giờ: " + ("chưa có" if oi_ch_now is None else f"{oi_ch_now:+.2f}% (nguồn {nguon_oi})"),
+                "OI 1 giờ (BTC): " + ("chưa có" if oi_ch_now is None else f"{oi_ch_now:+.2f}% (nguồn {nguon_oi})"),
+                "CVD 1 giờ: " + ("chưa có" if bo_loc.get("cvd_1h") is None
+                                 else f"{bo_loc['cvd_1h']:+.0f} BTC, mua chủ động {bo_loc['ty_le_mua']:.0f}%"),
+                "Funding: " + ("chưa có" if bo_loc.get("funding") is None else f"{bo_loc['funding']:+.4f}%"),
                 "", "Vùng:"]
         for v in cfg.get("vung", []):
             s = state["vung"][f"{v['loai']}:{v['tu']}-{v['den']}"]
