@@ -1,35 +1,35 @@
-Chạy lúc 15:46 27/11 (giờ VN)
+Chạy lúc 22:36 27/11 (giờ VN)
 Nến 15m: Binance Futures lỗi — 451 Client Error:  for url: https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=15m&limit=100
 Nến 15m: lấy từ OKX Futures — OK (99 nến)
 OI: Binance lỗi — 451 Client Error:  for url: https://fapi.binance.com/futures/data/openInterestHist?symbol=BTCUSDT&period=5m&limit=13
-OI (BTC): lấy từ OKX — OK, 1 giờ thay đổi -1.27%
+OI (BTC): lấy từ OKX — OK, 1 giờ thay đổi +0.01%
 Squeeze: đang theo dõi 0 sự kiện
 Nến 5m: Binance Futures lỗi — 451 Client Error:  for url: https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=5m&limit=100
 Nến 5m: lấy từ OKX Futures — OK (99 nến)
-Kế hoạch chờ: đang theo dõi 1
-CVD 1 giờ: +1020 BTC (mua chủ động 55%)
-Funding: +0.0024%
+Kế hoạch chờ: đang theo dõi 2
+CVD 1 giờ: -4112 BTC (mua chủ động 45%)
+Funding: +0.0016%
 
-Giá BTC: 61.759 (nguồn OKX Futures)
-OI 1 giờ (BTC): -1.27% (nguồn OKX)
-CVD 1 giờ: +1020 BTC, mua chủ động 55%
-Funding: +0.0024%
+Giá BTC: 59.781 (nguồn OKX Futures)
+OI 1 giờ (BTC): +0.01% (nguồn OKX)
+CVD 1 giờ: -4112 BTC, mua chủ động 45%
+Funding: +0.0016%
 
 Vùng:
 • Vùng gấu 4H 62.000–63.500
 • Vùng gấu nhỏ (bò cũ đổi vai) 60.700–61.300
 Cụm đang canh:
-• long 61.013: đang canh
-• long 60.112: đang canh
-• long 59.912: đang canh
-• long 59.612: đang canh
-• short 62.264: đang canh
-• short 62.564: đang canh
-• short 62.864: đang canh
-• short 63.315: đang canh
+• long 59.089: đang canh
+• long 58.763: đang canh
+• long 58.492: đang canh
+• long 57.896: đang canh
+• short 60.281: đang canh
+• short 62.016: đang canh
+• short 62.233: đang canh
+• short 62.829: đang canh
 
 Kế hoạch chờ:
-🔴 SHORT: vào 62.864, SL 63.378, TP 61.105 → 3.4R
-   dải dày 62.264 · 62.564 · 62.864 (74.0M)
-🟢 LONG: vào 61.013, SL 60.052, TP 62.171 → 1.2R (R thấp, chỉ ghi nhật ký)
-   dải dày 61.013 (40.5M)
+🔴 SHORT: vào 60.281, SL 60.643, TP 59.178 → 3.1R
+   dải dày 60.281 (48.0M)
+🟢 LONG: vào 58.492, SL 57.838, TP 60.191 → 2.6R
+   dải dày 59.089 · 58.763 · 58.492 (151.9M)
