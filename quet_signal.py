@@ -23,6 +23,7 @@ import sys
 
 import requests
 
+import ke_hoach
 import squeeze
 
 DIR = os.path.dirname(os.path.abspath(__file__))
@@ -508,7 +509,8 @@ def main():
         diag.append(f"Squeeze: lỗi — {str(e)[:120]}")
 
     # đổi mức → không chạy lại nến cũ với mức mới (tránh báo sai)
-    ma_muc = json.dumps({k: cfg.get(k) for k in ("vung", "cum_long_duoi_gia", "cum_short_tren_gia")},
+    ma_muc = json.dumps({k: cfg.get(k) for k in ("vung", "cum_long_duoi_gia", "cum_short_tren_gia",
+                                                  "cum_long_duoi_trieu", "cum_short_tren_trieu")},
                         sort_keys=True)
     doi_muc = state.get("ma_muc") != ma_muc
     if doi_muc:
@@ -518,6 +520,11 @@ def main():
         state["muc"] = {}
         state["vung"] = {}
         canh_bao = khoi_tao_muc(cfg, state, gia)
+        try:
+            canh_bao += [""] + ke_hoach.khi_doi_muc(
+                cfg, state, gia, t_now, lambda ti, m, pr, tg: ntfy(topic, ti, m, pr, tg))
+        except Exception as e:  # noqa
+            diag.append(f"Kế hoạch chờ: lỗi lập — {str(e)[:120]}")
         if state.get("nen_cuoi"):
             test = True          # báo tóm tắt mức mới lên điện thoại
 
@@ -551,6 +558,18 @@ def main():
         except Exception as e:  # noqa
             diag.append(f"Xác nhận 5m: lỗi — {str(e)[:120]}")
     state["cho_xac_nhan"] = cho
+
+    # ── kế hoạch chờ: giá chạm điểm vào / kết quả TP-SL (nến 5m) ──
+    if state.get("ke_hoach"):
+        try:
+            _, b5k = lay_nen("5m")
+            def _gui_kh(ti, m, pr, tg):
+                ntfy(topic, ti, m, pr, tg)
+                ghi_nhat_ky(t_now, "ke_hoach", "", gia, oi_ch, ti)
+            ke_hoach.theo_doi(state, b5k, t_now, _gui_kh)
+            diag.append(f"Kế hoạch chờ: đang theo dõi {len(state['ke_hoach'])}")
+        except Exception as e:  # noqa
+            diag.append(f"Kế hoạch chờ: lỗi theo dõi — {str(e)[:120]}")
 
     # ── OI xả mạnh ──
     if oi_ch_now is not None and oi_ch_now <= -cfg.get("oi_xa_manh_phan_tram", 2.0):
