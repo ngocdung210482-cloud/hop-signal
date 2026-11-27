@@ -1,8 +1,8 @@
-Tổng kết squeeze — cập nhật 07:48 26/11 (giờ VN)
+Tổng kết squeeze — cập nhật 12:04 27/11 (giờ VN)
 
-Squeeze LÊN (short bị ép): 2 lần
-  Trong 4 giờ: quay đầu 1 (50%), đi tiếp 1 (50%), chưa rõ/đi ngang 0
-  Trong 12 giờ: quay đầu 1 (50%), đi tiếp 1 (50%), chưa rõ/đi ngang 0
+Squeeze LÊN (short bị ép): 3 lần
+  Trong 4 giờ: quay đầu 2 (67%), đi tiếp 1 (33%), chưa rõ/đi ngang 0
+  Trong 12 giờ: quay đầu 2 (67%), đi tiếp 1 (33%), chưa rõ/đi ngang 0
 
 Squeeze XUỐNG (long bị ép): 0 lần
 
