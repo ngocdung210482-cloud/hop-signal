@@ -1,35 +1,35 @@
-Chạy lúc 12:20 27/11 (giờ VN)
+Chạy lúc 15:46 27/11 (giờ VN)
 Nến 15m: Binance Futures lỗi — 451 Client Error:  for url: https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=15m&limit=100
 Nến 15m: lấy từ OKX Futures — OK (99 nến)
 OI: Binance lỗi — 451 Client Error:  for url: https://fapi.binance.com/futures/data/openInterestHist?symbol=BTCUSDT&period=5m&limit=13
-OI (BTC): lấy từ OKX — OK, 1 giờ thay đổi +0.15%
+OI (BTC): lấy từ OKX — OK, 1 giờ thay đổi -1.27%
 Squeeze: đang theo dõi 0 sự kiện
 Nến 5m: Binance Futures lỗi — 451 Client Error:  for url: https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=5m&limit=100
 Nến 5m: lấy từ OKX Futures — OK (99 nến)
-Kế hoạch chờ: đang theo dõi 2
-CVD 1 giờ: +195 BTC (mua chủ động 54%)
-Funding: +0.0096%
+Kế hoạch chờ: đang theo dõi 1
+CVD 1 giờ: +1020 BTC (mua chủ động 55%)
+Funding: +0.0024%
 
-Giá BTC: 61.617 (nguồn OKX Futures)
-OI 1 giờ (BTC): +0.15% (nguồn OKX)
-CVD 1 giờ: +195 BTC, mua chủ động 54%
-Funding: +0.0096%
+Giá BTC: 61.759 (nguồn OKX Futures)
+OI 1 giờ (BTC): -1.27% (nguồn OKX)
+CVD 1 giờ: +1020 BTC, mua chủ động 55%
+Funding: +0.0024%
 
 Vùng:
 • Vùng gấu 4H 62.000–63.500
 • Vùng gấu nhỏ (bò cũ đổi vai) 60.700–61.300
 Cụm đang canh:
-• long 60.727: đang canh
-• long 60.096: đang canh
-• long 59.902: đang canh
-• long 59.611: đang canh
-• short 61.940: đang canh
-• short 62.231: đang canh
-• short 62.571: đang canh
-• short 62.862: đang canh
+• long 61.013: đang canh
+• long 60.112: đang canh
+• long 59.912: đang canh
+• long 59.612: đang canh
+• short 62.264: đang canh
+• short 62.564: đang canh
+• short 62.864: đang canh
+• short 63.315: đang canh
 
 Kế hoạch chờ:
-🔴 SHORT: vào 62.231, SL 62.634, TP 60.818 → 3.5R
-   dải dày 61.940 · 62.231 (92.5M)
-🟢 LONG: vào 60.727, SL 60.036, TP 61.847 → 1.6R
-   dải dày 60.727 (41.0M)
+🔴 SHORT: vào 62.864, SL 63.378, TP 61.105 → 3.4R
+   dải dày 62.264 · 62.564 · 62.864 (74.0M)
+🟢 LONG: vào 61.013, SL 60.052, TP 62.171 → 1.2R (R thấp, chỉ ghi nhật ký)
+   dải dày 61.013 (40.5M)
