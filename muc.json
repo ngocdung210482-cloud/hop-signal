@@ -1,5 +1,5 @@
 {
-  "ghi_chu": "Cụm lấy từ CoinGlass Model 1, Coin, 24 giờ (09:57 ngày 27/11). Long chiếm 67%.",
+  "ghi_chu": "Cụm lấy từ CoinGlass Model 1, Coin, 24 giờ (12:19 ngày 27/11). Long chiếm 66%.",
   "ngay_cap_nhat": "2026-11-27",
   "so_du_usc": 2000,
   "rui_ro_phan_tram": 2,
@@ -30,7 +30,7 @@
     61940,
     62231,
     62571,
-    62911
+    62862
   ],
   "cum_long_duoi_trieu": [
     41.0,
@@ -40,8 +40,8 @@
   ],
   "cum_short_tren_trieu": [
     33.8,
-    33.2,
+    58.7,
     20.5,
-    17.5
+    20.3
   ]
 }
