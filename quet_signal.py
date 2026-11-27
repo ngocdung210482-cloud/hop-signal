@@ -23,7 +23,7 @@ import sys
 
 import requests
 
-import ke_hoach
+import ke_hoach as kh_cho
 import squeeze
 
 DIR = os.path.dirname(os.path.abspath(__file__))
@@ -521,7 +521,7 @@ def main():
         state["vung"] = {}
         canh_bao = khoi_tao_muc(cfg, state, gia)
         try:
-            canh_bao += [""] + ke_hoach.khi_doi_muc(
+            canh_bao += [""] + kh_cho.khi_doi_muc(
                 cfg, state, gia, t_now, lambda ti, m, pr, tg: ntfy(topic, ti, m, pr, tg))
         except Exception as e:  # noqa
             diag.append(f"Kế hoạch chờ: lỗi lập — {str(e)[:120]}")
@@ -566,7 +566,7 @@ def main():
             def _gui_kh(ti, m, pr, tg):
                 ntfy(topic, ti, m, pr, tg)
                 ghi_nhat_ky(t_now, "ke_hoach", "", gia, oi_ch, ti)
-            ke_hoach.theo_doi(state, b5k, t_now, _gui_kh)
+            kh_cho.theo_doi(state, b5k, t_now, _gui_kh)
             diag.append(f"Kế hoạch chờ: đang theo dõi {len(state['ke_hoach'])}")
         except Exception as e:  # noqa
             diag.append(f"Kế hoạch chờ: lỗi theo dõi — {str(e)[:120]}")
