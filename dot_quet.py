@@ -82,8 +82,27 @@ def _them_cum(nhip, cfg, tu, den):
             da.add(round(m))
 
 
-def _ghi(n, di_xa):
+def _oi_nhip(n, cfg):
+    """(% thay đổi OI trong nhịp, ước tính triệu USD vị thế thay đổi trên toàn thị trường)."""
+    a, b = n.get("oi_tu"), n.get("oi_cuc")
+    if not a or not b or a[1] != b[1] or not a[0]:
+        return None, None
+    pct = (b[0] / a[0] - 1) * 100
+    tong = cfg.get("oi_tong_btc")
+    usd = pct / 100 * tong * n["cuc"] / 1e6 if tong else None
+    return pct, usd
+
+
+def _oi_txt(n, cfg):
+    pct, usd = _oi_nhip(n, cfg)
+    if pct is None:
+        return ""
+    return f" OI {pct:+.2f}%" + (f" (~{usd:+,.0f}M USD toàn thị trường)" if usd is not None else "") + "."
+
+
+def _ghi(n, di_xa, cfg=None):
     moi = not os.path.exists(CSV)
+    pct, usd = _oi_nhip(n, cfg or {})
     tong = round(sum(c[1] for c in n["cum"]), 1)
     quay = "xuống" if n["huong"] == "len" else "lên"
     thuan = "chưa rõ" if n["xu_huong"] == "chưa rõ" else \
@@ -91,16 +110,20 @@ def _ghi(n, di_xa):
     with open(CSV, "a", encoding="utf-8") as f:
         if moi:
             f.write("dinh_day_luc_vn,phien,nhip,gia_bat_dau,dinh_day,nhip_dai_pct,so_cum_quet,"
-                    "tong_trieu_usd_quet,cac_cum,xu_huong_4h,quay_dau,quay_dau_di_xa_pct\n")
+                    "tong_trieu_usd_quet,cac_cum,oi_thay_doi_pct,oi_uoc_tinh_trieu_usd,"
+                    "xu_huong_4h,quay_dau,quay_dau_di_xa_pct\n")
         f.write(f"{_vn(dt.datetime.fromisoformat(n['t_cuc']))},{n['phien']},"
                 f"{'lên' if n['huong'] == 'len' else 'xuống'},{round(n['tu'])},{round(n['cuc'])},"
                 f"{round(abs(n['cuc'] / n['tu'] - 1) * 100, 2)},{len(n['cum'])},{tong},"
-                f"\"{' '.join(f'{c[0]}:{c[1]}M' for c in n['cum'])}\",{n['xu_huong']},"
+                f"\"{' '.join(f'{c[0]}:{c[1]}M' for c in n['cum'])}\","
+                f"{'' if pct is None else round(pct, 2)},{'' if usd is None else round(usd)},{n['xu_huong']},"
                 f"{quay} {thuan},{di_xa}\n")
 
 
-def cap_nhat(state, cfg, bars, b4, ntfy):
-    """bars: nến 15m đã đóng (cũ → mới). b4: nến 4H đã đóng. Gọi mỗi lần bot chạy."""
+def cap_nhat(state, cfg, bars, b4, ntfy, oi=None, nguon_oi=None):
+    """bars: nến 15m đã đóng (cũ → mới). b4: nến 4H đã đóng. oi: OI hiện tại (BTC, 1 sàn).
+    Gọi mỗi lần bot chạy."""
+    oi_mau = [oi, nguon_oi] if oi else None
     moc = state.get("dq_nen")
     moi = [b for b in bars if moc is None or b["t"] > dt.datetime.fromisoformat(moc)]
     if not moi:
@@ -124,7 +147,8 @@ def cap_nhat(state, cfg, bars, b4, ntfy):
                 n = {"huong": "len" if len_truoc else "xuong",
                      "tu": n["lo"] if len_truoc else n["hi"],
                      "cuc": n["hi"] if len_truoc else n["lo"],
-                     "t_cuc": n["t_hi"] if len_truoc else n["t_lo"], "cum": [], "cho_di_xa": None}
+                     "t_cuc": n["t_hi"] if len_truoc else n["t_lo"], "cum": [], "cho_di_xa": None,
+                     "oi_tu": None, "oi_cuc": oi_mau}
                 _them_cum(n, cfg, n["tu"], n["cuc"])
             continue
         len_ = n["huong"] == "len"
@@ -132,6 +156,7 @@ def cap_nhat(state, cfg, bars, b4, ntfy):
         if (cuc_moi > n["cuc"]) if len_ else (cuc_moi < n["cuc"]):
             _them_cum(n, cfg, n["cuc"], cuc_moi)
             n["cuc"], n["t_cuc"] = cuc_moi, b["t"].isoformat()
+            n["oi_cuc"] = oi_mau
         nguoc = b["l"] if len_ else b["h"]
         bat = (n["cuc"] - nguoc) / n["cuc"] * 100 if len_ else (nguoc - n["cuc"]) / n["cuc"] * 100
         if bat >= QUAY_DAU:
@@ -142,18 +167,20 @@ def cap_nhat(state, cfg, bars, b4, ntfy):
                                         or b4)
             # nhịp trước (đang chờ biết quay đầu đi xa bao nhiêu) → nay đã biết = độ dài nhịp này
             if n.get("cho_di_xa"):
-                _ghi(n["cho_di_xa"], round(abs(n["cuc"] / n["tu"] - 1) * 100, 2))
+                _ghi(n["cho_di_xa"], round(abs(n["cuc"] / n["tu"] - 1) * 100, 2), cfg)
             truoc = {k: v for k, v in n.items() if k != "cho_di_xa"}
             tong = sum(c[1] for c in n["cum"])
             quay = "XUỐNG" if len_ else "LÊN"
             thuan = "chưa rõ xu hướng" if n["xu_huong"] == "chưa rõ" else \
                 ("thuận xu hướng 4H" if (quay == "LÊN") == (n["xu_huong"] == "tăng") else "ngược xu hướng 4H (sóng hồi)")
+            oi_txt = _oi_txt(n, cfg)
             tin = (f"🔄 BTC quay đầu {quay} sau khi quét {tong:.0f}M",
                    f"{'Đỉnh' if len_ else 'Đáy'} {_f(n['cuc'])} lúc {_vn(t_cuc)} (phiên {n['phien']}), "
-                   f"nhịp {abs(n['cuc'] / n['tu'] - 1) * 100:.1f}%, quét {len(n['cum'])} cụm.\n"
+                   f"nhịp {abs(n['cuc'] / n['tu'] - 1) * 100:.1f}%, quét {len(n['cum'])} cụm.{oi_txt}\n"
                    f"Quay đầu {thuan}. Chỉ ghi nhật ký, chưa phải tín hiệu vào lệnh.")
             n = {"huong": "xuong" if len_ else "len", "tu": n["cuc"], "cuc": nguoc,
-                 "t_cuc": b["t"].isoformat(), "cum": [], "cho_di_xa": truoc}
+                 "t_cuc": b["t"].isoformat(), "cum": [], "cho_di_xa": truoc,
+                 "oi_tu": n.get("oi_cuc"), "oi_cuc": oi_mau}
             _them_cum(n, cfg, n["tu"], n["cuc"])
     state["dq_nhip"] = n
     if tin:

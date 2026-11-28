@@ -555,7 +555,8 @@ def main():
     try:
         _, b4 = lay_nen("4h")
         b4 = [x for x in b4 if x["t"] + dt.timedelta(hours=4) <= t_now]
-        dot_quet.cap_nhat(state, cfg, bars, b4, lambda ti, m, pr, tg: ntfy(topic, ti, m, pr, tg))
+        dot_quet.cap_nhat(state, cfg, bars, b4, lambda ti, m, pr, tg: ntfy(topic, ti, m, pr, tg),
+                          oi, nguon_oi)
         n = state.get("dq_nhip") or {}
         diag.append(f"Đợt quét: nhịp {n.get('huong') or 'chưa rõ'}, đã quét {len(n.get('cum', []))} cụm")
     except Exception as e:  # noqa
