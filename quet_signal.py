@@ -25,6 +25,7 @@ import requests
 
 import ke_hoach as kh_cho
 import squeeze
+import dot_quet
 
 DIR = os.path.dirname(os.path.abspath(__file__))
 MUC = os.path.join(DIR, "muc.json")
@@ -549,6 +550,16 @@ def main():
     for b in moi:
         xu_ly_nen(cfg, state, b, oi_ch, gui)
     state["nen_cuoi"] = bars[-1]["t"].isoformat()
+
+    # ── đợt quét: quét bao nhiêu triệu USD thì quay đầu (chỉ ghi nhật ký + 1 tin nhẹ) ──
+    try:
+        _, b4 = lay_nen("4h")
+        b4 = [x for x in b4 if x["t"] + dt.timedelta(hours=4) <= t_now]
+        dot_quet.cap_nhat(state, cfg, bars, b4, lambda ti, m, pr, tg: ntfy(topic, ti, m, pr, tg))
+        n = state.get("dq_nhip") or {}
+        diag.append(f"Đợt quét: nhịp {n.get('huong') or 'chưa rõ'}, đã quét {len(n.get('cum', []))} cụm")
+    except Exception as e:  # noqa
+        diag.append(f"Đợt quét: lỗi — {str(e)[:120]}")
 
     # ── quét gần đây + OI giảm sau đó → đủ điều kiện ──
     con = []
