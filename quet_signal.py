@@ -376,7 +376,7 @@ def xu_ly_nen(cfg, state, b, oi_ch, gui):
                 gui("xuyen_cum", f"↘️ Giá xuyên qua cụm {phia} {fmt(L)}" if phia == "long"
                     else f"↗️ Giá xuyên qua cụm {phia} {fmt(L)}",
                     f"Đã 1 giờ mà nến 15m chưa đóng lại được bên kia mức (đóng {fmt(b['c'])}).\n"
-                    f"Không có phản ứng → KHÔNG vào. Chờ cụm tiếp theo.\n🔄 Claude sẽ tự cập nhật heatmap trong vòng 1 giờ.",
+                    f"Không có phản ứng → KHÔNG vào. Chờ cụm tiếp theo.\n🔄 bot sẽ tự cập nhật heatmap trong khoảng 30 phút.",
                     3, ["warning"], L, b["c"])
                 bat_co_cap_nhat(f"xuyên cụm {phia} {fmt(L)}", b["c"])
 
@@ -399,7 +399,7 @@ def _quet(cfg, state, k, phia, L, cuc, b, oi_ch, gui):
         f"Râu chạm {fmt(cuc)}, nến 15m đóng {fmt(b['c'])} lúc {gio_vn(b['t'])}.\n"
         f"{vung_txt}. {oi_txt}.\n"
         + ("Chờ OI giảm thêm để đủ điều kiện, hoặc tự xem OI.\n" if v else "")
-        + "🔄 Cụm này đã hết — Claude sẽ tự cập nhật heatmap trong vòng 1 giờ.",
+        + "🔄 Cụm này đã hết — bot sẽ tự cập nhật heatmap trong khoảng 30 phút.",
         4, ["broom"], L, b["c"])
 
 
@@ -627,7 +627,7 @@ def main():
     if abs(lech) >= cfg.get("gia_xa_phan_tram", 2.0) and not state.get("da_bao_xa"):
         ntfy(topic, "🔄 Giá đã đi xa — đang chờ cập nhật mức",
              f"Giá {fmt(gia)}, {lech:+.1f}% so với lúc cập nhật mức ({fmt(goc)}).\n"
-             f"Claude sẽ tự cập nhật cụm thanh lý trong vòng 1 giờ. "
+             f"Bot sẽ tự cập nhật cụm thanh lý trong khoảng 30 phút. "
              f"Vùng bò/gấu 4H vẫn do bạn vẽ — nếu cần đổi vùng thì gửi biểu đồ 4H.", 3, ["arrows_counterclockwise"])
         state["da_bao_xa"] = True
         bat_co_cap_nhat(f"giá đi xa {lech:+.1f}%", gia)
@@ -642,7 +642,7 @@ def main():
     # Claude tự cập nhật mỗi 4 giờ; chỉ nhắc khi mức đã cũ hơn 1 ngày (lịch tự động có trục trặc)
     if vn.hour >= 8 and state.get("nhac_heatmap") != hom_nay and (vn.date() - cu).days >= 1:
         ntfy(topic, "⚠️ Cụm thanh lý chưa được cập nhật",
-             f"Các mức đang dùng từ ngày {cu:%d/%m} — lịch tự cập nhật của Claude có thể bị lỗi. "
+             f"Các mức đang dùng từ ngày {cu:%d/%m} — bot tự đọc CoinGlass (workflow heatmap) có thể bị lỗi. "
              f"Nhắn Claude \"cập nhật bot\" để kiểm tra.", 2, ["warning"])
         state["nhac_heatmap"] = hom_nay
 
