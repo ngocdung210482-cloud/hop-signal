@@ -32,6 +32,7 @@ STATE = os.path.join(DIR, "quet_state.json")
 LOG = os.path.join(DIR, "nhat_ky_tin_hieu.csv")
 LOG_BO_LOC = os.path.join(DIR, "nhat_ky_bo_loc.csv")
 DIAG = os.path.join(DIR, "ket_qua_chay.txt")
+CO_CAP_NHAT = os.path.join(DIR, "can_cap_nhat.json")   # cờ: Claude đọc cờ này để tự cập nhật cụm
 
 VN = dt.timedelta(hours=7)
 NEN = dt.timedelta(minutes=15)
@@ -277,6 +278,15 @@ def ke_hoach(cfg, phia, cuc_tri, gia):
     return "\n".join(dong)
 
 
+def bat_co_cap_nhat(ly_do, gia):
+    """Bật cờ để Claude (lịch kiểm tra mỗi giờ) tự vào CoinGlass cập nhật cụm thanh lý."""
+    co = load_json(CO_CAP_NHAT, None)
+    if co:
+        return
+    save_json(CO_CAP_NHAT, {"ly_do": ly_do, "gia": round(gia), "luc": now_utc().isoformat()})
+    diag.append(f"Bật cờ cần cập nhật: {ly_do}")
+
+
 def khoi_tao_muc(cfg, state, gia):
     lv = state.setdefault("muc", {})
     canh_bao = []
@@ -362,13 +372,15 @@ def xu_ly_nen(cfg, state, b, oi_ch, gui):
                 gui("xuyen_cum", f"↘️ Giá xuyên qua cụm {phia} {fmt(L)}" if phia == "long"
                     else f"↗️ Giá xuyên qua cụm {phia} {fmt(L)}",
                     f"Đã 1 giờ mà nến 15m chưa đóng lại được bên kia mức (đóng {fmt(b['c'])}).\n"
-                    f"Không có phản ứng → KHÔNG vào. Chờ cụm tiếp theo.\n📸 Nên chụp heatmap mới.",
+                    f"Không có phản ứng → KHÔNG vào. Chờ cụm tiếp theo.\n🔄 Claude sẽ tự cập nhật heatmap trong vòng 1 giờ.",
                     3, ["warning"], L, b["c"])
+                bat_co_cap_nhat(f"xuyên cụm {phia} {fmt(L)}", b["c"])
 
 
 def _quet(cfg, state, k, phia, L, cuc, b, oi_ch, gui):
     k = f"{phia}:{int(L) if L.is_integer() else L}"
     state["muc"][k] = {"tt": "da_quet", "t": b["t"].isoformat(), "cuc": cuc}
+    bat_co_cap_nhat(f"quét cụm {phia} {fmt(L)}", b["c"])
     v = vung_gan(cfg, phia, L)
     quet = {"phia": phia, "muc": L, "cuc": cuc, "t": b["t"].isoformat(),
             "vung": v["ten"] if v else None, "da_ket_hop": False}
@@ -383,7 +395,7 @@ def _quet(cfg, state, k, phia, L, cuc, b, oi_ch, gui):
         f"Râu chạm {fmt(cuc)}, nến 15m đóng {fmt(b['c'])} lúc {gio_vn(b['t'])}.\n"
         f"{vung_txt}. {oi_txt}.\n"
         + ("Chờ OI giảm thêm để đủ điều kiện, hoặc tự xem OI.\n" if v else "")
-        + "📸 Cụm này đã hết — nên chụp heatmap mới.",
+        + "🔄 Cụm này đã hết — Claude sẽ tự cập nhật heatmap trong vòng 1 giờ.",
         4, ["broom"], L, b["c"])
 
 
@@ -585,11 +597,12 @@ def main():
     goc = state.get("gia_luc_cap_nhat") or gia
     lech = (gia / goc - 1) * 100
     if abs(lech) >= cfg.get("gia_xa_phan_tram", 2.0) and not state.get("da_bao_xa"):
-        ntfy(topic, "📸 Giá đã đi xa — cần cập nhật mức",
+        ntfy(topic, "🔄 Giá đã đi xa — đang chờ cập nhật mức",
              f"Giá {fmt(gia)}, {lech:+.1f}% so với lúc cập nhật mức ({fmt(goc)}).\n"
-             f"Các cụm thanh lý có thể đã thay đổi. Chụp heatmap (Model 1, Coin, 24 giờ) "
-             f"+ biểu đồ 4H gửi Claude.", 3, ["camera"])
+             f"Claude sẽ tự cập nhật cụm thanh lý trong vòng 1 giờ. "
+             f"Vùng bò/gấu 4H vẫn do bạn vẽ — nếu cần đổi vùng thì gửi biểu đồ 4H.", 3, ["arrows_counterclockwise"])
         state["da_bao_xa"] = True
+        bat_co_cap_nhat(f"giá đi xa {lech:+.1f}%", gia)
 
     # ── nhắc chụp heatmap mỗi ngày (sau 8h sáng VN) ──
     vn = t_now + VN
@@ -598,10 +611,11 @@ def main():
         cu = dt.date.fromisoformat(cfg.get("ngay_cap_nhat", "2000-01-01"))
     except ValueError:
         cu = dt.date(2000, 1, 1)
+    # Claude tự cập nhật mỗi 4 giờ; chỉ nhắc khi mức đã cũ hơn 1 ngày (lịch tự động có trục trặc)
     if vn.hour >= 8 and state.get("nhac_heatmap") != hom_nay and (vn.date() - cu).days >= 1:
-        ntfy(topic, "📸 Nhắc: chụp heatmap mới",
-             f"Các mức đang dùng từ ngày {cu:%d/%m}. Chụp danh sách cụm thanh lý (CoinGlass, "
-             f"Model 1 hoặc 2) gửi Claude để cập nhật bot.", 2, ["camera"])
+        ntfy(topic, "⚠️ Cụm thanh lý chưa được cập nhật",
+             f"Các mức đang dùng từ ngày {cu:%d/%m} — lịch tự cập nhật của Claude có thể bị lỗi. "
+             f"Nhắn Claude \"cập nhật bot\" để kiểm tra.", 2, ["warning"])
         state["nhac_heatmap"] = hom_nay
 
     if test:
