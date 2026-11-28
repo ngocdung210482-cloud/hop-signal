@@ -47,34 +47,28 @@ def doc_heatmap(page):
 TL_CSV = os.path.join(DIR, "nhat_ky_thanh_ly_thuc.csv")
 
 
+def _usd(x):
+    x = x.replace("$", "").replace(",", "")
+    k = {"K": 1e3, "M": 1e6, "B": 1e9}.get(x[-1:], 1)
+    return float(x[:-1] if k != 1 else x) * k
+
+
 def doc_thanh_ly(page):
     """Thanh lý THẬT của BTC (tất cả sàn) 1h/4h/12h/24h, long/short, USD — bảng Total Liquidations."""
     page.goto("https://www.coinglass.com/liquidations", timeout=90000)
-    page.wait_for_selector('tr:has(a[href="/currencies/BTC"])', timeout=60000)
-    page.wait_for_timeout(2000)
-    o = page.evaluate("""() => {
-        const tr = [...document.querySelectorAll('tr')].find(r => r.querySelector('a[href="/currencies/BTC"]'));
-        if (!tr) return null;
-        return [...tr.querySelectorAll('td')].map(td => {
-            const t = td.querySelector('[title]');
-            return t ? t.getAttribute('title') : td.innerText.trim();
-        });
-    }""")
-    if not o:
-        return None
-    so_ = []
-    for x in o:
-        x = (x or "").replace(",", "").replace("$", "").strip()
-        try:
-            so_.append(float(x))
-        except ValueError:
-            pass
-    # thứ tự: hạng, giá, %24h, 1hL, 1hS, 4hL, 4hS, 12hL, 12hS, 24hL, 24hS → lấy 8 số cuối
-    if len(so_) < 8:
-        return None
-    v = so_[-8:]
-    return dict(zip(["1h_long", "1h_short", "4h_long", "4h_short", "12h_long", "12h_short",
-                     "24h_long", "24h_short"], v))
+    page.wait_for_function("() => /24h Short/.test(document.body.innerText)", timeout=60000)
+    tien = r"\$[\d.,]+[KMB]?"
+    pat = re.compile(r"\bBTC\s+(?:BTC\s+)?\$[\d.,]+\s+[-+]?[\d.]+%\s+((?:" + tien + r"\s+){7}" + tien + ")")
+    for _ in range(20):
+        txt = page.inner_text("body")
+        k = txt.find("24h Short")
+        m = pat.search(txt, k if k >= 0 else 0)
+        if m:
+            v = [_usd(x) for x in re.findall(tien, m.group(1))]
+            return dict(zip(["1h_long", "1h_short", "4h_long", "4h_short", "12h_long", "12h_short",
+                             "24h_long", "24h_short"], v))
+        page.wait_for_timeout(1500)
+    return None
 
 
 def ghi_thanh_ly(tl, ly_do):
