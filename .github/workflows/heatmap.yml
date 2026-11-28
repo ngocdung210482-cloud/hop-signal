@@ -45,10 +45,10 @@ jobs:
           python lay_heatmap.py
           git config user.name "heatmap-bot"
           git config user.email "heatmap-bot@users.noreply.github.com"
-          git add muc.json
+          git add muc.json; [ -f nhat_ky_thanh_ly_thuc.csv ] && git add nhat_ky_thanh_ly_thuc.csv
           git rm -q --cached can_cap_nhat.json 2>/dev/null || true
           if ! git diff --cached --quiet; then
-            git commit -q -m "Bot tự cập nhật cụm thanh lý từ CoinGlass"
+            git commit -q -m "Bot tự cập nhật cụm thanh lý + thanh lý thật từ CoinGlass"
             git pull -q --rebase origin main && git push -q
             # bot quét thanh lý tự git pull mỗi 5 phút nên sẽ đọc mức mới ở lần kiểm tra kế tiếp
           fi

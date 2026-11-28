@@ -44,6 +44,52 @@ def doc_heatmap(page):
     return short, long_, ty
 
 
+TL_CSV = os.path.join(DIR, "nhat_ky_thanh_ly_thuc.csv")
+
+
+def doc_thanh_ly(page):
+    """Thanh lý THẬT của BTC (tất cả sàn) 1h/4h/12h/24h, long/short, USD — bảng Total Liquidations."""
+    page.goto("https://www.coinglass.com/liquidations", timeout=90000)
+    page.wait_for_selector('tr:has(a[href="/currencies/BTC"])', timeout=60000)
+    page.wait_for_timeout(2000)
+    o = page.evaluate("""() => {
+        const tr = [...document.querySelectorAll('tr')].find(r => r.querySelector('a[href="/currencies/BTC"]'));
+        if (!tr) return null;
+        return [...tr.querySelectorAll('td')].map(td => {
+            const t = td.querySelector('[title]');
+            return t ? t.getAttribute('title') : td.innerText.trim();
+        });
+    }""")
+    if not o:
+        return None
+    so_ = []
+    for x in o:
+        x = (x or "").replace(",", "").replace("$", "").strip()
+        try:
+            so_.append(float(x))
+        except ValueError:
+            pass
+    # thứ tự: hạng, giá, %24h, 1hL, 1hS, 4hL, 4hS, 12hL, 12hS, 24hL, 24hS → lấy 8 số cuối
+    if len(so_) < 8:
+        return None
+    v = so_[-8:]
+    return dict(zip(["1h_long", "1h_short", "4h_long", "4h_short", "12h_long", "12h_short",
+                     "24h_long", "24h_short"], v))
+
+
+def ghi_thanh_ly(tl, ly_do):
+    moi = not os.path.exists(TL_CSV)
+    now = dt.datetime.utcnow() + VN
+    with open(TL_CSV, "a", encoding="utf-8") as f:
+        if moi:
+            f.write("luc_vn,ly_do,1h_long_trieu,1h_short_trieu,4h_long_trieu,4h_short_trieu,"
+                    "12h_long_trieu,12h_short_trieu,24h_long_trieu,24h_short_trieu\n")
+        f.write(f"{now:%H:%M %d/%m},{ly_do},"
+                + ",".join(f"{tl[k] / 1e6:.2f}" for k in ["1h_long", "1h_short", "4h_long", "4h_short",
+                                                          "12h_long", "12h_short", "24h_long", "24h_short"])
+                + "\n")
+
+
 def doc_oi(page):
     page.goto("https://www.coinglass.com/open-interest/BTC", timeout=90000)
     page.wait_for_function("() => /All\\s+[\\d.]+K BTC/.test(document.body.innerText)", timeout=60000)
@@ -59,6 +105,11 @@ def main():
                           viewport={"width": 1280, "height": 1600})
         short, long_, ty = doc_heatmap(page)
         try:
+            tl = doc_thanh_ly(page)
+        except Exception as e:  # noqa
+            print("Không đọc được thanh lý thật:", e)
+            tl = None
+        try:
             oi = doc_oi(page)
         except Exception as e:  # noqa
             print("Không đọc được OI:", e)
@@ -67,6 +118,9 @@ def main():
     print("short:", short)
     print("long:", long_)
     print("short %:", ty, "| OI BTC:", oi)
+    print("thanh lý thật BTC:", tl)
+    if tl:
+        ghi_thanh_ly(tl, "có cờ bot (vừa quét cụm)" if os.path.exists(CO) else "định kỳ")
     if len(short) < 2 or len(long_) < 2:
         sys.exit("Đọc được quá ít cụm — không sửa muc.json")
     short.sort(key=lambda x: x[0])
