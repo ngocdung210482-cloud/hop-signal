@@ -66,7 +66,8 @@ def _bars_binance(url, khung="15m"):
     out = []
     for k in r.json():
         out.append({"t": dt.datetime.utcfromtimestamp(k[0] / 1000), "o": float(k[1]),
-                    "h": float(k[2]), "l": float(k[3]), "c": float(k[4])})
+                    "h": float(k[2]), "l": float(k[3]), "c": float(k[4]),
+                    "v": float(k[7]) if len(k) > 7 and k[7] else 0.0})
     return out
 
 
@@ -79,7 +80,8 @@ def _bars_okx(khung="15m"):
     out = []
     for k in reversed(d):
         out.append({"t": dt.datetime.utcfromtimestamp(int(k[0]) / 1000), "o": float(k[1]),
-                    "h": float(k[2]), "l": float(k[3]), "c": float(k[4])})
+                    "h": float(k[2]), "l": float(k[3]), "c": float(k[4]),
+                    "v": float(k[7]) if len(k) > 7 and k[7] else 0.0})
     return out
 
 
@@ -555,6 +557,14 @@ def main():
     try:
         _, b4 = lay_nen("4h")
         b4 = [x for x in b4 if x["t"] + dt.timedelta(hours=4) <= t_now]
+        try:
+            r = requests.get("https://www.okx.com/api/v5/rubik/stat/taker-volume",
+                             params={"ccy": "BTC", "instType": "CONTRACTS", "period": "5m"},
+                             timeout=20, headers=UA)
+            r.raise_for_status()
+            dot_quet.ghi_taker(state, r.json()["data"], t_now)
+        except Exception as e:  # noqa
+            diag.append(f"Đợt quét: lỗi lấy mua/bán chủ động — {str(e)[:100]}")
         dot_quet.cap_nhat(state, cfg, bars, b4, lambda ti, m, pr, tg: ntfy(topic, ti, m, pr, tg),
                           oi, nguon_oi)
         n = state.get("dq_nhip") or {}

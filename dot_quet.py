@@ -100,6 +100,42 @@ def _oi_txt(n, cfg):
     return f" OI {pct:+.2f}%" + (f" (~{usd:+,.0f}M USD toàn thị trường)" if usd is not None else "") + "."
 
 
+def ghi_taker(state, data, t_now):
+    """Lưu khối lượng mua/bán chủ động 5 phút (OKX, USD) của 48 giờ gần nhất: {ts_ms: [bán, mua]}."""
+    tk = state.setdefault("dq_taker", {})
+    for x in data:
+        tk[str(x[0])] = [float(x[1]), float(x[2])]
+    moc = (t_now - dt.timedelta(hours=48) - dt.datetime(1970, 1, 1)).total_seconds() * 1000
+    for k in [k for k in tk if int(k) < moc]:
+        del tk[k]
+
+
+def _taker_nhip(state, n):
+    """(mua chủ động %, CVD triệu USD) từ đầu nhịp tới đỉnh/đáy — đo lệnh MỚI chủ động đẩy giá."""
+    if not n.get("t_tu"):
+        return None, None
+    a = (dt.datetime.fromisoformat(n["t_tu"]) - dt.datetime(1970, 1, 1)).total_seconds() * 1000
+    b = (dt.datetime.fromisoformat(n["t_cuc"]) - dt.datetime(1970, 1, 1)).total_seconds() * 1000 + 15 * 60000
+    ban = mua = 0.0
+    for k, (s_, m_) in state.get("dq_taker", {}).items():
+        if a <= int(k) < b:
+            ban += s_
+            mua += m_
+    if mua + ban <= 0:
+        return None, None
+    return mua / (mua + ban) * 100, (mua - ban) / 1e6
+
+
+def _kl_bat_thuong(n, bars):
+    """Khối lượng trung bình mỗi nến 15m trong nhịp ÷ trung bình 24 giờ (>2 = bất thường, có thể có tin)."""
+    if not n.get("nen_cuc") or not n.get("vol_cuc"):
+        return None
+    vs = [b.get("v", 0) for b in bars[-96:] if b.get("v")]
+    if not vs:
+        return None
+    return (n["vol_cuc"] / n["nen_cuc"]) / (sum(vs) / len(vs))
+
+
 def _ghi(n, di_xa, cfg=None):
     moi = not os.path.exists(CSV)
     pct, usd = _oi_nhip(n, cfg or {})
@@ -111,12 +147,14 @@ def _ghi(n, di_xa, cfg=None):
         if moi:
             f.write("dinh_day_luc_vn,phien,nhip,gia_bat_dau,dinh_day,nhip_dai_pct,so_cum_quet,"
                     "tong_trieu_usd_quet,cac_cum,oi_thay_doi_pct,oi_uoc_tinh_trieu_usd,"
+                    "mua_chu_dong_pct,cvd_trieu_usd_okx,kl_so_voi_tb_24h,"
                     "xu_huong_4h,quay_dau,quay_dau_di_xa_pct\n")
         f.write(f"{_vn(dt.datetime.fromisoformat(n['t_cuc']))},{n['phien']},"
                 f"{'lên' if n['huong'] == 'len' else 'xuống'},{round(n['tu'])},{round(n['cuc'])},"
                 f"{round(abs(n['cuc'] / n['tu'] - 1) * 100, 2)},{len(n['cum'])},{tong},"
                 f"\"{' '.join(f'{c[0]}:{c[1]}M' for c in n['cum'])}\","
-                f"{'' if pct is None else round(pct, 2)},{'' if usd is None else round(usd)},{n['xu_huong']},"
+                f"{'' if pct is None else round(pct, 2)},{'' if usd is None else round(usd)},"
+                f"{n.get('mua_pct', '')},{n.get('cvd', '')},{n.get('kl_tl', '')},{n['xu_huong']},"
                 f"{quay} {thuan},{di_xa}\n")
 
 
@@ -148,15 +186,19 @@ def cap_nhat(state, cfg, bars, b4, ntfy, oi=None, nguon_oi=None):
                      "tu": n["lo"] if len_truoc else n["hi"],
                      "cuc": n["hi"] if len_truoc else n["lo"],
                      "t_cuc": n["t_hi"] if len_truoc else n["t_lo"], "cum": [], "cho_di_xa": None,
-                     "oi_tu": None, "oi_cuc": oi_mau}
+                     "oi_tu": None, "oi_cuc": oi_mau,
+                     "t_tu": n["t_lo"] if len_truoc else n["t_hi"], "vol": 0.0, "nen": 0}
                 _them_cum(n, cfg, n["tu"], n["cuc"])
             continue
         len_ = n["huong"] == "len"
+        n["vol"] = n.get("vol", 0.0) + b.get("v", 0.0)
+        n["nen"] = n.get("nen", 0) + 1
         cuc_moi = b["h"] if len_ else b["l"]
         if (cuc_moi > n["cuc"]) if len_ else (cuc_moi < n["cuc"]):
             _them_cum(n, cfg, n["cuc"], cuc_moi)
             n["cuc"], n["t_cuc"] = cuc_moi, b["t"].isoformat()
             n["oi_cuc"] = oi_mau
+            n["vol_cuc"], n["nen_cuc"] = n["vol"], n["nen"]
         nguoc = b["l"] if len_ else b["h"]
         bat = (n["cuc"] - nguoc) / n["cuc"] * 100 if len_ else (nguoc - n["cuc"]) / n["cuc"] * 100
         if bat >= QUAY_DAU:
@@ -165,6 +207,11 @@ def cap_nhat(state, cfg, bars, b4, ntfy, oi=None, nguon_oi=None):
             n["phien"] = phien(t_cuc)
             n["xu_huong"] = xu_huong_4h([x for x in b4 if x["t"] + dt.timedelta(hours=4) <= t_cuc]
                                         or b4)
+            mp, cvd = _taker_nhip(state, n)
+            n["mua_pct"] = "" if mp is None else round(mp)
+            n["cvd"] = "" if cvd is None else round(cvd)
+            tl = _kl_bat_thuong(n, bars)
+            n["kl_tl"] = "" if tl is None else round(tl, 1)
             # nhịp trước (đang chờ biết quay đầu đi xa bao nhiêu) → nay đã biết = độ dài nhịp này
             if n.get("cho_di_xa"):
                 _ghi(n["cho_di_xa"], round(abs(n["cuc"] / n["tu"] - 1) * 100, 2), cfg)
@@ -174,13 +221,19 @@ def cap_nhat(state, cfg, bars, b4, ntfy, oi=None, nguon_oi=None):
             thuan = "chưa rõ xu hướng" if n["xu_huong"] == "chưa rõ" else \
                 ("thuận xu hướng 4H" if (quay == "LÊN") == (n["xu_huong"] == "tăng") else "ngược xu hướng 4H (sóng hồi)")
             oi_txt = _oi_txt(n, cfg)
+            if n["mua_pct"] != "":
+                oi_txt += f" Mua chủ động {n['mua_pct']}%."
+            if n["kl_tl"] != "" and n["kl_tl"] >= 2:
+                oi_txt += f" ⚠️ Khối lượng gấp {n['kl_tl']} lần bình thường (có thể có tin)."
             tin = (f"🔄 BTC quay đầu {quay} sau khi quét {tong:.0f}M",
                    f"{'Đỉnh' if len_ else 'Đáy'} {_f(n['cuc'])} lúc {_vn(t_cuc)} (phiên {n['phien']}), "
                    f"nhịp {abs(n['cuc'] / n['tu'] - 1) * 100:.1f}%, quét {len(n['cum'])} cụm.{oi_txt}\n"
                    f"Quay đầu {thuan}. Chỉ ghi nhật ký, chưa phải tín hiệu vào lệnh.")
             n = {"huong": "xuong" if len_ else "len", "tu": n["cuc"], "cuc": nguoc,
                  "t_cuc": b["t"].isoformat(), "cum": [], "cho_di_xa": truoc,
-                 "oi_tu": n.get("oi_cuc"), "oi_cuc": oi_mau}
+                 "oi_tu": n.get("oi_cuc"), "oi_cuc": oi_mau,
+                 "t_tu": n["t_cuc"], "vol": b.get("v", 0.0), "nen": 1,
+                 "vol_cuc": b.get("v", 0.0), "nen_cuc": 1}
             _them_cum(n, cfg, n["tu"], n["cuc"])
     state["dq_nhip"] = n
     if tin:
