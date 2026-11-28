@@ -1,51 +1,50 @@
-Chạy lúc 19:56 28/11 (giờ VN)
+Chạy lúc 21:06 28/11 (giờ VN)
 Nến 15m: Binance Futures lỗi — 451 Client Error:  for url: https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=15m&limit=100
 Nến 15m: lấy từ OKX Futures — OK (99 nến)
 OI: Binance lỗi — 451 Client Error:  for url: https://fapi.binance.com/futures/data/openInterestHist?symbol=BTCUSDT&period=5m&limit=13
-OI (BTC): lấy từ OKX — OK, 1 giờ thay đổi -0.14%
+OI (BTC): lấy từ OKX — OK, 1 giờ thay đổi +0.09%
 Squeeze: đang theo dõi 0 sự kiện
 Nến 4h: Binance Futures lỗi — 451 Client Error:  for url: https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=4h&limit=100
 Nến 4h: OKX Futures trả về quá ít dữ liệu
 Nến 4h: lấy từ Binance Spot — OK (100 nến)
-Chạm cụm: đang theo dõi 3 lần chạm
+Chạm cụm: đang theo dõi 4 lần chạm
 Đợt quét: nhịp xuong, đã quét 3 cụm
 Nến 5m: Binance Futures lỗi — 451 Client Error:  for url: https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=5m&limit=100
 Nến 5m: lấy từ OKX Futures — OK (99 nến)
-Kế hoạch chờ: đang theo dõi 25
-CVD 1 giờ: +57 BTC (mua chủ động 51%)
-Funding: +0.0063%
+Kế hoạch chờ: đang theo dõi 31
+CVD 1 giờ: -284 BTC (mua chủ động 46%)
+Funding: +0.0061%
 
-Giá BTC: 59.203 (nguồn OKX Futures)
-OI 1 giờ (BTC): -0.14% (nguồn OKX)
-CVD 1 giờ: +57 BTC, mua chủ động 51%
-Funding: +0.0063%
+Giá BTC: 59.076 (nguồn OKX Futures)
+OI 1 giờ (BTC): +0.09% (nguồn OKX)
+CVD 1 giờ: -284 BTC, mua chủ động 46%
+Funding: +0.0061%
 
 Vùng:
 • Vùng gấu 4H 62.000–63.500
 • Vùng gấu nhỏ (bò cũ đổi vai) 60.700–61.300
 Cụm đang canh:
-• long 59.044: đang canh
-• long 58.734: đang canh
-• long 58.476: đang canh
-• long 58.166: đang canh
-• long 57.856: đang canh
-• long 57.288: đang canh
-• long 56.978: đang canh
-• short 59.767: đang canh
-• short 60.077: đang canh
-• short 60.336: đang canh
-• short 60.542: đang canh
-• short 60.697: đang canh
-• short 60.955: đang canh
-• short 61.420: đang canh
-• short 62.040: đang canh
+• long 58.886: đang canh
+• long 58.733: đang canh
+• long 58.477: đang canh
+• long 58.170: đang canh
+• long 57.864: đang canh
+• long 57.353: đang canh
+• short 59.755: đang canh
+• short 60.061: đang canh
+• short 60.368: đang canh
+• short 60.572: đang canh
+• short 60.828: đang canh
+• short 61.185: đang canh
+• short 61.390: đang canh
+• short 62.054: đang canh
 
 Kế hoạch chờ:
-🔴 SHORT (TP 59.133):
-   • cụm gần 59.767 (49.2M), SL 60.137 → 1.7R
-   • cụm lớn 62.040 (60.6M), SL 62.412 → 7.8R
-   • mép dải 60.955 (38.4M), SL 61.481 → 3.5R
-🟢 LONG (TP 59.677):
-   • cụm gần 59.044 (24.2M), SL 58.675 → 1.7R
-   • cụm lớn 58.476 (103.5M), SL 58.108 → 3.3R
-   • mép dải 58.476 (103.5M), SL 58.108 → 3.3R
+🔴 SHORT (TP 58.974):
+   • cụm gần 59.755 (49.2M), SL 60.121 → 2.1R
+   • cụm lớn 60.368 (89.0M), SL 60.633 → 5.3R
+   • mép dải 60.368 (89.0M), SL 60.633 → 5.3R
+🟢 LONG (TP 59.665):
+   • cụm gần 58.886 (23.9M), SL 58.674 → 3.7R
+   • cụm lớn 58.477 (103.5M), SL 58.112 → 3.3R
+   • mép dải 58.477 (103.5M), SL 58.112 → 3.3R
