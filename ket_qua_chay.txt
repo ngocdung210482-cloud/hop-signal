@@ -1,8 +1,8 @@
-Chạy lúc 09:39 28/11 (giờ VN)
+Chạy lúc 11:52 28/11 (giờ VN)
 Nến 15m: Binance Futures lỗi — 451 Client Error:  for url: https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=15m&limit=100
 Nến 15m: lấy từ OKX Futures — OK (99 nến)
 OI: Binance lỗi — 451 Client Error:  for url: https://fapi.binance.com/futures/data/openInterestHist?symbol=BTCUSDT&period=5m&limit=13
-OI (BTC): lấy từ OKX — OK, 1 giờ thay đổi +0.01%
+OI (BTC): lấy từ OKX — OK, 1 giờ thay đổi +0.16%
 Squeeze: đang theo dõi 0 sự kiện
 Nến 4h: Binance Futures lỗi — 451 Client Error:  for url: https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=4h&limit=100
 Nến 4h: OKX Futures trả về quá ít dữ liệu
@@ -11,28 +11,42 @@ Chạm cụm: đang theo dõi 0 lần chạm
 Đợt quét: nhịp chưa rõ, đã quét 0 cụm
 Nến 5m: Binance Futures lỗi — 451 Client Error:  for url: https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=5m&limit=100
 Nến 5m: lấy từ OKX Futures — OK (99 nến)
-Kế hoạch chờ: đang theo dõi 3
-CVD 1 giờ: -254 BTC (mua chủ động 43%)
-Funding: +0.0058%
+Kế hoạch chờ: đang theo dõi 9
+CVD 1 giờ: +2 BTC (mua chủ động 50%)
+Funding: +0.0062%
 
-Giá BTC: 60.119 (nguồn OKX Futures)
-OI 1 giờ (BTC): +0.01% (nguồn OKX)
-CVD 1 giờ: -254 BTC, mua chủ động 43%
-Funding: +0.0058%
+Giá BTC: 59.994 (nguồn OKX Futures)
+OI 1 giờ (BTC): +0.16% (nguồn OKX)
+CVD 1 giờ: +2 BTC, mua chủ động 50%
+Funding: +0.0062%
 
 Vùng:
 • Vùng gấu 4H 62.000–63.500
 • Vùng gấu nhỏ (bò cũ đổi vai) 60.700–61.300
 Cụm đang canh:
+• long 59.631: đang canh
 • long 59.360: đang canh
 • long 59.089: đang canh
 • long 58.763: đang canh
 • long 58.492: đang canh
 • long 58.167: đang canh
 • long 57.896: đang canh
+• long 56.975: đang canh
 • short 60.336: đang canh
 • short 60.552: đang canh
 • short 60.715: đang canh
+• short 61.149: đang canh
+• short 61.420: đang canh
 • short 62.016: đang canh
-• short 62.233: đang canh
-• short 62.829: đang canh
+• short 62.341: đang canh
+• short 62.667: đang canh
+
+Kế hoạch chờ:
+🔴 SHORT (TP 59.720):
+   • cụm gần 60.336 (27.0M), SL 60.613 → 2.2R
+   • cụm lớn 62.016 (51.1M), SL 62.403 → 5.9R
+   • mép dải 60.715 (33.6M), SL 61.210 → 2.0R
+🟢 LONG (TP 60.245):
+   • cụm gần 59.631 (28.7M), SL 59.301 → 1.9R
+   • cụm lớn 58.492 (64.9M), SL 58.109 → 4.6R
+   • mép dải 58.492 (64.9M), SL 58.109 → 4.6R
