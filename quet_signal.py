@@ -26,6 +26,7 @@ import requests
 import ke_hoach as kh_cho
 import squeeze
 import dot_quet
+import cham_cum
 
 DIR = os.path.dirname(os.path.abspath(__file__))
 MUC = os.path.join(DIR, "muc.json")
@@ -567,6 +568,11 @@ def main():
             diag.append(f"Đợt quét: lỗi lấy mua/bán chủ động — {str(e)[:100]}")
         dot_quet.cap_nhat(state, cfg, bars, b4, lambda ti, m, pr, tg: ntfy(topic, ti, m, pr, tg),
                           oi, nguon_oi)
+        try:
+            cham_cum.cap_nhat(state, cfg, bars, b4)
+            diag.append(f"Chạm cụm: đang theo dõi {len(state.get('cc_dang', []))} lần chạm")
+        except Exception as e:  # noqa
+            diag.append(f"Chạm cụm: lỗi — {str(e)[:120]}")
         n = state.get("dq_nhip") or {}
         diag.append(f"Đợt quét: nhịp {n.get('huong') or 'chưa rõ'}, đã quét {len(n.get('cum', []))} cụm")
     except Exception as e:  # noqa
