@@ -366,6 +366,19 @@ def xu_ly_nen(cfg, state, b, oi_ch, gui):
                 _quet(cfg, state, k, phia, L, cuc, b, oi_ch, gui)
             else:
                 s.update(tt="duoi", t=t.isoformat(), cuc=cuc, so_nen=1)
+                tien = ""
+                k_gia = "cum_long_duoi_gia" if phia == "long" else "cum_short_tren_gia"
+                ds_gia = cfg.get(k_gia, [])
+                ds_tien = cfg.get(k_gia.replace("gia", "trieu"), [])
+                for g_, m_ in zip(ds_gia, ds_tien):
+                    if abs(g_ - L) < 1:
+                        tien = f" ({m_}M)"
+                gui("dang_xuyen", (f"⬇️ Giá đang xuyên cụm long {fmt(L)}{tien}" if phia == "long"
+                                   else f"⬆️ Giá đang xuyên cụm short {fmt(L)}{tien}"),
+                    f"Nến 15m lúc {gio_vn(t)} {'thấp' if phia == 'long' else 'cao'} {fmt(cuc)}, "
+                    f"đóng {fmt(b['c'])} — chưa rút lại.\n"
+                    f"Bot chờ tối đa 1 giờ: đóng lại bên kia mức → báo 🧹 quét + rút râu; "
+                    f"không rút → báo xuyên hẳn.", 3, ["warning"], L, b["c"])
         elif s["tt"] == "duoi":
             s["cuc"] = min(s["cuc"], b["l"]) if phia == "long" else max(s["cuc"], b["h"])
             s["so_nen"] += 1

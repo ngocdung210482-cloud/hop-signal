@@ -69,6 +69,22 @@ jobs:
               git commit -q -m "nhật ký bot quét thanh lý"
               git pull -q --rebase origin "${{ github.ref_name }}" && git push -q || true
             fi
+            # GitHub hay bỏ lỡ lịch chạy → bot tự gọi workflow đọc heatmap:
+            #   • khi có cờ can_cap_nhat.json (tối đa 1 lần / 25 phút)
+            #   • mỗi mốc nến 4H (00, 04, 08, 12, 16, 20 giờ UTC = 7, 11, 15, 19, 23, 3 giờ VN)
+            GOI=0
+            if [ -f can_cap_nhat.json ] && [ $((SECONDS - ${LAST_CO:--9999})) -ge 1500 ]; then GOI=1; LAST_CO=$SECONDS; fi
+            MOC4H="$(date -u +%Y%m%d)-$(( $(date -u +%-H) / 4 ))"
+            if [ "$MOC4H" != "${LAST_4H:-}" ] && [ "$(date -u +%-M)" -ge 3 ]; then
+              [ -n "${LAST_4H:-}" ] && GOI=1
+              LAST_4H="$MOC4H"
+            fi
+            if [ $GOI -eq 1 ]; then
+              curl -sf -X POST -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github+json" \
+                "https://api.github.com/repos/${{ github.repository }}/actions/workflows/heatmap.yml/dispatches" \
+                -d '{"ref":"${{ github.ref_name }}"}' && echo "Đã gọi cập nhật heatmap" || echo "Gọi heatmap lỗi"
+            fi
             LAN=$((LAN + 1))
             NGU=$((300 - (SECONDS - BATDAU)))
             if [ $NGU -gt 0 ]; then sleep $NGU; fi
